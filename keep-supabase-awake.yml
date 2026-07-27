@@ -1,0 +1,22 @@
+name: Keep Supabase Awake
+
+# Supabase project gratis akan di-pause otomatis kalau tidak ada
+# aktivitas API sama sekali dalam beberapa hari. Workflow ini
+# "mengetuk" project setiap 3 hari sekali supaya tetap aktif,
+# tanpa perlu ada customer yang buka halaman.
+
+on:
+  schedule:
+    - cron: '0 3 */3 * *'   # jam 03:00 UTC, tiap 3 hari
+  workflow_dispatch: {}       # bisa dijalankan manual dari tab Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          curl -s -o /dev/null -w "%{http_code}" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/service_types?select=id&limit=1" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}"

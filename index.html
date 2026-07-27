@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Login — NAFA Tech CRM</title>
+<link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="brand">NAFA<span>·</span>TECH</div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="email" placeholder="admin@nafatech.id" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary" style="width:100%" id="loginBtn">Masuk</button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script>
+    const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
+
+    // Kalau sudah login, langsung ke dashboard
+    sb.auth.getSession().then(({data}) => {
+      if (data.session) window.location.href = "dashboard.html";
+    });
+
+    async function login(){
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('loginError');
+      errEl.textContent = "";
+      if(!email || !password){ errEl.textContent = "Isi email dan password."; return; }
+
+      const { error } = await sb.auth.signInWithPassword({ email, password });
+      if(error){
+        errEl.textContent = "Login gagal: " + error.message;
+        return;
+      }
+      window.location.href = "dashboard.html";
+    }
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('password').addEventListener('keydown', e => { if(e.key === 'Enter') login(); });
+  </script>
+</body>
+</html>

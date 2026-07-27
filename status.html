@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Status Antrian — NAFA Tech</title>
+<link rel="stylesheet" href="assets/style.css" />
+<style>
+  .status-wrap{ max-width: 640px; margin: 0 auto; padding: 40px 20px; }
+  .status-head{ text-align:center; margin-bottom: 28px; }
+  .status-head .brand{ font-size:1.2rem; justify-content:center; display:flex; margin-bottom:6px; }
+  .refresh-note{ text-align:center; color:var(--text-dim); font-size:.78rem; margin-top: 18px; }
+</style>
+</head>
+<body>
+  <div class="status-wrap">
+    <div class="status-head">
+      <div class="brand">NAFA<span>·</span>TECH</div>
+      <p class="text-dim">Cari nomor antrian Anda di bawah untuk melihat posisi & estimasi selesai.</p>
+    </div>
+
+    <div class="card">
+      <h2>Sedang dikerjakan</h2>
+      <div id="currentBox"><p class="text-dim">Memuat...</p></div>
+    </div>
+
+    <div class="card">
+      <h2>Menunggu giliran <span class="count" id="waitingCount"></span></h2>
+      <table>
+        <thead><tr><th>No. Antrian</th><th>Jenis Layanan</th><th>Masuk</th></tr></thead>
+        <tbody id="waitingBody"><tr class="empty-row"><td colspan="3">Memuat...</td></tr></tbody>
+      </table>
+    </div>
+
+    <p class="refresh-note">Halaman ini otomatis diperbarui setiap 8 detik.</p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/config.js"></script>
+  <script>
+    const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
+
+    function fmtDateTime(iso){
+      if(!iso) return "-";
+      return new Date(iso).toLocaleString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }
+
+    async function loadStatus(){
+      // Membaca dari VIEW public_queue (lihat supabase/schema.sql) —
+      // tidak berisi nama/kontak customer, jadi aman diakses publik.
+      const { data, error } = await sb.from('public_queue').select('*').order('queue_number', { ascending: true });
+      if(error){
+        document.getElementById('currentBox').innerHTML = `<p class="text-dim">Gagal memuat status: ${error.message}</p>`;
+        return;
+      }
+
+      const current = data.find(o => o.status === 'in_progress');
+      const waiting = data.filter(o => o.status === 'waiting');
+
+      const currentBox = document.getElementById('currentBox');
+      currentBox.innerHTML = current ? `
+        <div class="ticket current">
+          <div class="ticket-number">#${current.queue_number}</div>
+          <div class="ticket-body">
+            <div class="title">${current.service_name || 'Layanan'}</div>
+            <div class="meta">Mulai: ${fmtDateTime(current.started_at)} · Estimasi selesai: ${fmtDateTime(current.estimated_done_at)}</div>
+          </div>
+        </div>` : '<p class="text-dim">Belum ada yang sedang dikerjakan.</p>';
+
+      document.getElementById('waitingCount').textContent = `(${waiting.length})`;
+      const tbody = document.getElementById('waitingBody');
+      tbody.innerHTML = waiting.length === 0
+        ? '<tr class="empty-row"><td colspan="3">Tidak ada antrian menunggu.</td></tr>'
+        : waiting.map(o => `<tr><td class="mono">#${o.queue_number}</td><td>${o.service_name || '-'}</td><td>${fmtDateTime(o.created_at)}</td></tr>`).join('');
+    }
+
+    loadStatus();
+    setInterval(loadStatus, 8000);
+  </script>
+</body>
+</html>
