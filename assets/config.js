@@ -12,7 +12,7 @@ window.NAFA_CONFIG = {
   // 2. Ambil dari akun EmailJS (emailjs.com) — untuk kirim notifikasi
   //    email ke Nafatechid@gmail.com setiap ada order baru.
   EMAILJS_PUBLIC_KEY: "e2TnSlO9POqirXHX3",
-EMAILJS_SERVICE_ID: "service_r47dxsj",
+EMAILJS_SERVICE_ID: "service_wussidj",
 EMAILJS_TEMPLATE_ID: "template_cfocasr",
   NOTIF_EMAIL: "Nafatechid@gmail.com"
 };
