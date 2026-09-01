@@ -1,1 +1,498 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pesan Layanan — NAFA Tech</title>
+<style>
+  :root{
+    --ink:#0B1220; --panel:#121B2E; --panel-2:#182339; --line:#25324A;
+    --text:#E8EDF5; --muted:#8B98AC; --mint:#3DDC97; --amber:#F5A623;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--ink);color:var(--text);min-height:100vh;padding:24px 16px;}
+  .wrap{max-width:480px;margin:0 auto;}
+  h1{font-size:22px;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:22px;line-height:1.5;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+  .field input,.field select,.field textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);
+    padding:12px 13px;border-radius:10px;font-size:15px;outline:none;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:var(--mint);}
+  .field textarea{min-height:100px;resize:vertical;}
+  .promo-badge{display:inline-block;background:var(--amber);color:#2A1A00;font-size:11px;font-weight:700;
+    padding:3px 10px;border-radius:100px;margin-bottom:14px;}
+  .btn-submit{width:100%;background:var(--mint);color:#04140D;border:none;border-radius:10px;
+    padding:15px;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-submit:disabled{opacity:.5;cursor:not-allowed;}
+  .msg{font-size:13.5px;margin-top:12px;line-height:1.5;}
+  .msg.error{color:#FF8A8A;}
+  .msg.success{color:var(--mint);}
+  .price-tag{color:var(--mint);font-weight:700;}
+  .empty-state{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;}
 
+  /* Domain add-on */
+  .addon-box{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;margin-bottom:16px;
+  }
+  .addon-toggle{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+  .addon-toggle input{width:auto;margin-top:3px;flex:none;}
+  .addon-toggle .at-title{font-weight:700;font-size:14px;}
+  .addon-toggle .at-desc{color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.5;}
+  .addon-fields{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);display:none;}
+  .addon-fields.open{display:block;}
+  .contact-choice{display:flex;gap:8px;margin-bottom:10px;}
+  .contact-choice label{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--panel);border:1.5px solid var(--line);border-radius:9px;
+    padding:9px 8px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+  }
+  .contact-choice input{width:auto;margin:0;}
+  .contact-choice label.picked{border-color:var(--mint);color:var(--text);}
+  .addon-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+
+  .total-box{
+    display:flex;justify-content:space-between;align-items:center;
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 16px;margin-bottom:16px;
+  }
+  .total-box .tl{font-size:13px;color:var(--muted);}
+  .total-box .tv{font-size:19px;font-weight:800;color:var(--mint);}
+  .consult-note{font-size:12.5px;color:var(--amber);margin-top:6px;line-height:1.5;}
+
+  /* Sambil menunggu metode pembayaran otomatis aktif -- transfer manual */
+  .pay-box{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin-bottom:16px;
+  }
+  .pay-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+  .bank-info{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:12px 14px;font-size:14px;margin-bottom:14px;line-height:1.7;
+  }
+  .bank-row{
+    display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;
+    border-bottom:1px dashed var(--line);
+  }
+  .bank-row:last-of-type{border-bottom:none;}
+  .bank-row input[type=checkbox]{width:auto;flex:none;margin:0;accent-color:var(--mint);}
+  .bank-row .bank-label{flex:1;}
+  .bank-row .copy-feedback{font-size:11.5px;color:var(--mint);font-weight:700;flex:none;min-width:60px;text-align:right;}
+  .qris-box{
+    background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:14px;margin-bottom:14px;text-align:center;
+  }
+  .qris-img{width:100%;max-width:260px;border-radius:10px;display:block;margin:0 auto;}
+  .upload-box{
+    display:block;border:2px dashed var(--line);border-radius:10px;padding:16px;
+    text-align:center;cursor:pointer;color:var(--muted);font-size:13px;background:var(--panel);
+  }
+  .upload-preview{width:100%;border-radius:10px;margin-top:10px;max-height:200px;object-fit:contain;background:var(--panel);}
+  .pay-warning{
+    font-size:12px;color:var(--text);line-height:1.7;margin-top:12px;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="promoBadgeWrap"></div>
+  <h1>Pesan Layanan NAFA Tech</h1>
+  <p class="sub">Isi data di bawah, tim kami akan segera menghubungi Anda untuk konfirmasi.</p>
+
+  <div class="card">
+    <div id="formArea">
+      <div class="field">
+        <label>Nama Anda</label>
+        <input id="p_customer" placeholder="Nama lengkap">
+      </div>
+      <div class="field">
+        <label>Kontak (WA aktif)</label>
+        <input id="p_contact" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>Pilih Layanan</label>
+        <select id="p_service"></select>
+      </div>
+
+      <div class="addon-box" id="addonBox">
+        <label class="addon-toggle">
+          <input type="checkbox" id="p_addon_domain">
+          <div>
+            <div class="at-title">🌐 Tambah Domain Berbayar <span class="price-tag">+Rp250.000</span></div>
+            <div class="at-desc">Opsional. Dapatkan nama domain sendiri (.com / .id) untuk website Anda, sekali bayar bersamaan dengan pesanan ini.</div>
+          </div>
+        </label>
+        <div class="addon-fields" id="addonFields">
+          <div class="field">
+            <label>Nama Domain yang Diinginkan</label>
+            <input id="p_domain_name" placeholder="Contoh: kalasanmasfery">
+          </div>
+          <div class="field">
+            <label>Ekstensi Domain</label>
+            <select id="p_domain_ext">
+              <option value=".com">.com</option>
+              <option value=".id">.id</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Kalau nama domain tidak tersedia, hubungi saya lewat</label>
+            <div class="contact-choice">
+              <label id="pickWA"><input type="radio" name="p_domain_contact_method" value="wa" checked> WhatsApp</label>
+              <label id="pickEmail"><input type="radio" name="p_domain_contact_method" value="email"> Email</label>
+            </div>
+          </div>
+          <div class="field" id="domainWaWrap">
+            <label>Nomor WhatsApp untuk Dihubungi</label>
+            <input id="p_domain_wa" placeholder="08xxxxxxxxxx">
+          </div>
+          <div class="field" id="domainEmailWrap" style="display:none;">
+            <label>Alamat Email untuk Dihubungi</label>
+            <input id="p_domain_email" type="email" placeholder="nama@email.com">
+          </div>
+          <div class="addon-note">💡 Kalau nama domain yang Anda pesan ternyata tidak tersedia, Tim NAFA Tech akan segera menghubungi Anda melalui kontak di atas untuk mendiskusikan nama alternatif.</div>
+        </div>
+      </div>
+
+      <div class="total-box" id="totalBox" style="display:none;">
+        <span class="tl">Total Estimasi</span>
+        <span class="tv" id="totalValue">Rp0</span>
+      </div>
+
+      <div class="pay-box" id="payBox" style="display:none;">
+        <h3 style="font-size:15px;margin-bottom:10px;">💳 Pembayaran</h3>
+        <div class="pay-note">Sambil menunggu metode pembayaran otomatis aktif, silakan transfer manual ke salah satu rekening/QRIS di bawah, lalu upload bukti transfernya. <b>Pesanan baru mulai diproses setelah bukti transfer diverifikasi Tim NAFA Tech</b> (dicocokkan dengan mutasi rekening asli), biasanya dalam 1×24 jam.</div>
+        <div class="bank-info" id="bankInfoBox"></div>
+        <div class="qris-box">
+          <div style="font-size:13px;font-weight:700;margin-bottom:8px;">Atau scan QRIS</div>
+          <img src="assets/qris.jpg" alt="QRIS NAFA Tech" class="qris-img">
+          <div class="pay-note" style="margin-top:8px;margin-bottom:0;">Scan pakai aplikasi e-wallet/m-banking apa pun, lalu masukkan nominal sesuai Total Estimasi di atas secara manual.</div>
+        </div>
+        <div class="field">
+          <label>Nama Pengirim Transfer</label>
+          <input id="p_pay_sender" placeholder="Sesuai nama di rekening/e-wallet pengirim">
+        </div>
+        <div class="field">
+          <label>Transfer dari Bank/E-Wallet Apa</label>
+          <input id="p_pay_bank" placeholder="Contoh: BCA, Mandiri, Gopay, QRIS, dll">
+        </div>
+        <div class="field">
+          <label>Upload Bukti Transfer</label>
+          <label class="upload-box" for="p_pay_proof">
+            <span id="payProofLabel">📎 Tap untuk pilih foto/screenshot bukti transfer</span>
+          </label>
+          <input type="file" id="p_pay_proof" accept="image/*" style="display:none;">
+        </div>
+        <div class="pay-warning">🙏 Untuk menjaga kepercayaan bersama, setiap bukti transfer akan kami cocokkan dulu dengan mutasi rekening sebelum pesanan diproses — jadi mohon pastikan buktinya sesuai ya. Kalau ada kendala soal pembayaran, langsung hubungi kami saja, dengan senang hati kami bantu 💬</div>
+      </div>
+
+      <div class="field">
+        <label>Detail / Catatan Pekerjaan</label>
+        <textarea id="p_notes" placeholder="Ceritakan kebutuhan Anda: nama instansi/resto, jumlah pengguna, fitur yang diinginkan, dll."></textarea>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="submitOrder()">Kirim Pesanan</button>
+      <div class="msg" id="formMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
+let SERVICE_TYPES = [];
+const DOMAIN_ADDON_PRICE = 250000;
+/* Rekening manual — dipakai sambil menunggu metode pembayaran otomatis
+   aktif. Tambah/ganti isi array "banks" di sini kalau ada rekening baru. */
+const BANK_INFO = {
+  banks: [
+    { name: 'BCA', number: '4090708835' },
+    { name: 'BNI', number: '2052343385' },
+    { name: 'BRI', number: '0435 0104 4932 509' }
+  ],
+  holder: 'MOCHAMMAD RIFKI ANHAR'
+};
+document.getElementById('bankInfoBox').innerHTML =
+  BANK_INFO.banks.map((b,i)=>`
+    <label class="bank-row">
+      <input type="checkbox" class="bank-copy-cb" data-number="${b.number.replace(/\s+/g,'')}">
+      <span class="bank-label">${b.name} — <b>${b.number}</b></span>
+      <span class="copy-feedback" id="copyFeedback_${i}"></span>
+    </label>`).join('') +
+  `<div style="margin-top:4px;">a.n. ${BANK_INFO.holder}</div>`;
+document.getElementById('bankInfoBox').addEventListener('change', async (e)=>{
+  if(!e.target.classList.contains('bank-copy-cb')) return;
+  const cb = e.target;
+  const number = cb.dataset.number;
+  const idx = Array.from(document.querySelectorAll('.bank-copy-cb')).indexOf(cb);
+  const feedbackEl = document.getElementById('copyFeedback_' + idx);
+  try{
+    await navigator.clipboard.writeText(number);
+    if(feedbackEl) feedbackEl.textContent = '✓ Tersalin';
+  }catch(err){
+    if(feedbackEl) feedbackEl.textContent = 'Gagal, salin manual';
+  }
+  setTimeout(()=>{ cb.checked = false; if(feedbackEl) feedbackEl.textContent = ''; }, 1800);
+});
+let payProofDataUrl = null;
+function resizeImageFile(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const maxW = 640;
+        const scale = Math.min(1, maxW/img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width*scale;
+        canvas.height = img.height*scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', 0.65));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+document.getElementById('p_pay_proof').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  payProofDataUrl = await resizeImageFile(file);
+  document.getElementById('payProofLabel').outerHTML = `<img class="upload-preview" id="payProofLabel" src="${payProofDataUrl}">`;
+});
+
+function fmtRupiah(v){
+  if(v === null || v === undefined || v === '') return '-';
+  if(Number(v) === 0) return 'Konsultasi';
+  return 'Rp' + Number(v).toLocaleString('id-ID');
+}
+function servicePrice(s){
+  return s.is_promo_scheduled ? s.promo_price : s.default_price;
+}
+function isConsultationService(s){
+  const price = servicePrice(s);
+  return price === null || price === undefined || Number(price) === 0;
+}
+
+// Logic sama persis dengan yang dipakai di dashboard admin (app.js):
+// - Layanan "konsultasi" (harga 0/kosong, mis. Toko Online / Website Custom)
+//   SELALU tampil kapan pun, tidak terikat jendela promo.
+// - Kalau ada layanan promo yang jendela tanggalnya aktif hari ini,
+//   tampilkan layanan-layanan promo itu (ditambah layanan konsultasi).
+// - Kalau tidak ada jendela promo yang aktif hari ini, tampilkan semua
+//   layanan normal/langganan (non-promo, harga > 0) seperti biasa
+//   (ditambah layanan konsultasi).
+function getVisibleServiceTypes(){
+  const today = new Date().getDate();
+  const activePromo = SERVICE_TYPES.filter(s =>
+    s.active && s.is_promo_scheduled &&
+    today >= s.promo_day_start && today <= s.promo_day_end
+  );
+  const alwaysVisible = SERVICE_TYPES.filter(s => s.active && isConsultationService(s));
+  const dedupe = (arr) => Array.from(new Map(arr.map(s=>[s.id,s])).values());
+  if(activePromo.length > 0) return dedupe([...activePromo, ...alwaysVisible]);
+  const normal = SERVICE_TYPES.filter(s => s.active && !s.is_promo_scheduled && !isConsultationService(s));
+  return dedupe([...normal, ...alwaysVisible]);
+}
+
+async function loadServices(){
+  const { data, error } = await sb.from('service_types').select('*').order('created_at');
+  if(error){
+    document.getElementById('formArea').innerHTML = '<div class="empty-state">Gagal memuat daftar layanan. Coba refresh halaman ini.</div>';
+    return;
+  }
+  SERVICE_TYPES = data || [];
+  const visible = getVisibleServiceTypes();
+  const isPromo = visible.some(s => s.is_promo_scheduled);
+
+  if(isPromo){
+    document.getElementById('promoBadgeWrap').innerHTML = '<div class="promo-badge">🔥 PROMO AKTIF SAMPAI TANGGAL 15</div>';
+  }
+
+  const select = document.getElementById('p_service');
+  if(visible.length === 0){
+    document.getElementById('formArea').innerHTML = '<div class="empty-state">Belum ada layanan yang bisa dipesan saat ini. Silakan hubungi kami langsung.</div>';
+    return;
+  }
+  select.innerHTML = visible.map(s=>{
+    const price = servicePrice(s);
+    return `<option value="${s.id}">${s.name} — ${fmtRupiah(price)}</option>`;
+  }).join('');
+  select.addEventListener('change', updatePriceUI);
+  updatePriceUI();
+}
+
+function updatePriceUI(){
+  const service = SERVICE_TYPES.find(s => s.id === document.getElementById('p_service').value);
+  const addonBox = document.getElementById('addonBox');
+  const totalBox = document.getElementById('totalBox');
+  const totalValue = document.getElementById('totalValue');
+  const payBox = document.getElementById('payBox');
+  if(!service){ addonBox.style.display='none'; totalBox.style.display='none'; payBox.style.display='none'; return; }
+
+  if(isConsultationService(service)){
+    // Layanan konsultasi: tanpa opsi domain, tanpa total harga otomatis,
+    // tanpa form pembayaran di muka -- harga & cara bayar ditentukan
+    // setelah ngobrol dengan tim.
+    addonBox.style.display = 'none';
+    document.getElementById('p_addon_domain').checked = false;
+    document.getElementById('addonFields').classList.remove('open');
+    totalBox.style.display = 'none';
+    payBox.style.display = 'none';
+    return;
+  }
+  addonBox.style.display = '';
+  const base = Number(servicePrice(service)) || 0;
+  const addonOn = document.getElementById('p_addon_domain').checked;
+  const total = base + (addonOn ? DOMAIN_ADDON_PRICE : 0);
+  totalBox.style.display = '';
+  totalValue.textContent = fmtRupiah(total);
+  payBox.style.display = '';
+}
+
+document.getElementById('p_addon_domain').addEventListener('change', (e)=>{
+  document.getElementById('addonFields').classList.toggle('open', e.target.checked);
+  updatePriceUI();
+});
+
+function setupContactChoice(){
+  const waLabel = document.getElementById('pickWA');
+  const emailLabel = document.getElementById('pickEmail');
+  const waWrap = document.getElementById('domainWaWrap');
+  const emailWrap = document.getElementById('domainEmailWrap');
+  function refresh(){
+    const method = document.querySelector('input[name="p_domain_contact_method"]:checked').value;
+    waLabel.classList.toggle('picked', method==='wa');
+    emailLabel.classList.toggle('picked', method==='email');
+    waWrap.style.display = method==='wa' ? '' : 'none';
+    emailWrap.style.display = method==='email' ? '' : 'none';
+  }
+  document.querySelectorAll('input[name="p_domain_contact_method"]').forEach(r=>r.addEventListener('change', refresh));
+  refresh();
+}
+setupContactChoice();
+
+async function submitOrder(){
+  const customer_name = document.getElementById('p_customer').value.trim();
+  const contact = document.getElementById('p_contact').value.trim();
+  const service_type_id = document.getElementById('p_service').value;
+  const notes = document.getElementById('p_notes').value.trim();
+  const msgEl = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+  msgEl.className = 'msg';
+  msgEl.textContent = '';
+
+  if(!customer_name || !contact){
+    msgEl.className = 'msg error';
+    msgEl.textContent = 'Nama dan kontak wajib diisi.';
+    return;
+  }
+  const service = SERVICE_TYPES.find(s => s.id === service_type_id);
+  if(!service){
+    msgEl.className = 'msg error';
+    msgEl.textContent = 'Layanan belum dipilih atau tidak valid. Coba refresh halaman.';
+    return;
+  }
+
+  const wantsDomain = !isConsultationService(service) && document.getElementById('p_addon_domain').checked;
+  let finalNotes = notes;
+  let price = isConsultationService(service) ? null : (Number(servicePrice(service)) || 0);
+
+  if(wantsDomain){
+    const domainName = document.getElementById('p_domain_name').value.trim();
+    const domainExt = document.getElementById('p_domain_ext').value;
+    const method = document.querySelector('input[name="p_domain_contact_method"]:checked').value;
+    const domainContactVal = method==='wa'
+      ? document.getElementById('p_domain_wa').value.trim()
+      : document.getElementById('p_domain_email').value.trim();
+
+    if(!domainName){
+      msgEl.className = 'msg error';
+      msgEl.textContent = 'Mohon isi nama domain yang diinginkan, atau batalkan centang Domain Berbayar.';
+      return;
+    }
+    if(!domainContactVal){
+      msgEl.className = 'msg error';
+      msgEl.textContent = 'Mohon isi kontak untuk konfirmasi ketersediaan domain (WhatsApp/Email), atau batalkan centang Domain Berbayar.';
+      return;
+    }
+    price += DOMAIN_ADDON_PRICE;
+    const addonBlock =
+      `\n\n— DOMAIN BERBAYAR (+Rp250.000) —\n` +
+      `Nama domain diminta: ${domainName}${domainExt}\n` +
+      `Kontak konfirmasi ketersediaan: ${method==='wa' ? 'WhatsApp' : 'Email'} — ${domainContactVal}\n` +
+      `(Kalau nama tidak tersedia, hubungi pelanggan lewat kontak di atas untuk nama alternatif.)`;
+    finalNotes = (finalNotes || '') + addonBlock;
+  }
+
+  // Layanan non-konsultasi wajib sertakan bukti transfer manual (Midtrans
+  // belum aktif). Layanan konsultasi (harga menyesuaikan) tidak perlu ini.
+  let paymentFields = {};
+  if(!isConsultationService(service)){
+    const senderName = document.getElementById('p_pay_sender').value.trim();
+    const senderBank = document.getElementById('p_pay_bank').value.trim();
+    if(!senderName){
+      msgEl.className = 'msg error';
+      msgEl.textContent = 'Mohon isi nama pengirim transfer.';
+      return;
+    }
+    if(!senderBank){
+      msgEl.className = 'msg error';
+      msgEl.textContent = 'Mohon isi bank/e-wallet asal transfer.';
+      return;
+    }
+    if(!payProofDataUrl){
+      msgEl.className = 'msg error';
+      msgEl.textContent = 'Mohon upload bukti transfer terlebih dahulu.';
+      return;
+    }
+    paymentFields = {
+      payment_status: 'verifying',
+      payment_proof: payProofDataUrl,
+      payment_sender_name: senderName,
+      payment_sender_bank: senderBank,
+      payment_amount: price,
+      payment_submitted_at: new Date().toISOString()
+    };
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  const { error } = await sb.from('orders').insert(Object.assign({
+    customer_name,
+    contact,
+    service_type_id,
+    estimated_hours: service.default_hours,
+    notes: finalNotes || null,
+    status: 'waiting',
+    price
+  }, paymentFields));
+
+  btn.disabled = false;
+  btn.textContent = 'Kirim Pesanan';
+
+  if(error){
+    msgEl.className = 'msg error';
+    msgEl.textContent = 'Gagal mengirim pesanan: ' + error.message;
+    return;
+  }
+
+  const confirmMsg = paymentFields.payment_status
+    ? '✅ Pesanan & bukti transfer Anda berhasil dikirim!<br><br>Tim kami akan memverifikasi pembayaran (dicocokkan dengan mutasi rekening) dalam 1×24 jam, lalu menghubungi Anda di ' + contact + '.'
+    : '✅ Pesanan Anda berhasil dikirim!<br><br>Tim kami akan segera menghubungi Anda di ' + contact + ' untuk konfirmasi selanjutnya.';
+  document.getElementById('formArea').innerHTML =
+    '<div class="empty-state" style="color:var(--mint);">' + confirmMsg + '</div>';
+}
+
+loadServices();
+</script>
+</body>
+</html>
