@@ -1,1 +1,896 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Form Order — Contoh untuk Landing Page</title>
+<style>
+  body{ font-family: 'Plus Jakarta Sans', Arial, sans-serif; background:#161D28; color:#EAEEF5; padding:40px; }
+  .box{ max-width:420px; margin:0 auto; background:#1F2836; border:1px solid #34405640; border-radius:14px; padding:26px; }
+  label{ font-size:.8rem; color:#8D98AC; font-weight:600; display:block; margin:14px 0 5px; }
+  input, select, textarea{ width:100%; background:#00000030; border:1px solid #34405640; border-radius:8px; color:#EAEEF5; padding:9px 11px; font-size:.9rem; box-sizing:border-box;}
+  button{ margin-top:18px; width:100%; background:#E8A33D; color:#1A1204; font-weight:700; border:none; border-radius:9px; padding:11px; cursor:pointer; }
+  button:disabled{ opacity:.55; cursor:not-allowed; }
+  #msg{ margin-top:12px; font-size:.85rem; }
+  .hint{ font-size:.76rem; color:#8D98AC; margin-top:4px; line-height:1.5; }
+  .price-box{
+    background:#00000030; border:1px solid #34405640; border-radius:9px;
+    padding:12px 14px; margin-top:16px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .price-box .pv{ font-size:1.1rem; font-weight:800; color:#E8A33D; }
+  .sub-block{
+    margin-top:16px; padding-top:14px; border-top:1px dashed #34405640;
+  }
+  .radio-choice{ display:flex; gap:8px; margin-top:6px; }
+  .radio-choice label{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background:#00000030; border:1.5px solid #34405640; border-radius:9px;
+    padding:9px 8px; font-size:.8rem; font-weight:600; color:#8D98AC; cursor:pointer; margin:0;
+  }
+  .radio-choice input{ width:auto; margin:0; }
+  .radio-choice label.picked{ border-color:#E8A33D; color:#EAEEF5; }
+  .demo-info{
+    background:#00000030; border:1px solid #33C6B040; border-radius:9px;
+    padding:12px 14px; margin-top:10px; font-size:.82rem; line-height:1.6;
+  }
+  .demo-info a{ color:#33C6B0; font-weight:700; word-break:break-all; }
+  .ack-box{
+    background:#00000030; border:1px solid #E8A33D60; border-radius:9px;
+    padding:12px 14px; margin-top:14px; font-size:.8rem; line-height:1.6;
+  }
+  .ack-box label{ display:flex; gap:8px; align-items:flex-start; color:#EAEEF5; font-weight:500; margin:0; cursor:pointer; }
+  .ack-box input{ width:auto; margin-top:3px; flex:none; }
+  .ack-box a{ color:#33C6B0; }
+  /* Honeypot: field ini disembunyikan dari manusia dengan CSS (bukan
+     "display:none" atau "type=hidden" karena beberapa bot pintar sengaja
+     skip field yang jelas-jelas disembunyikan lewat cara itu). Manusia
+     yang pakai browser normal tidak akan pernah melihat/mengisi field
+     ini. Bot yang otomatis isi SEMUA field di form akan kejebak di sini. */
+  .hp-field{
+    position:absolute !important;
+    left:-9999px !important;
+    top:-9999px !important;
+    width:1px; height:1px;
+    overflow:hidden;
+    opacity:0;
+  }
+  /* ===== Login Google/Facebook wajib sebelum lanjut ke Midtrans (khusus layanan berbayar/terkunci) ===== */
+  .auth-box{
+    background:#00000030; border:1px solid #33C6B060; border-radius:9px;
+    padding:14px; margin-top:14px;
+  }
+  .auth-note{ font-size:.78rem; color:#8D98AC; line-height:1.6; margin-bottom:10px; }
+  .login-btns{ display:flex; flex-direction:column; gap:8px; }
+  .login-btns button{
+    padding:10px; border-radius:8px; border:1px solid #34405640;
+    background:#1F2836; color:#EAEEF5; font-size:.82rem; font-weight:600; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px; margin:0;
+  }
+  .login-btns button:hover{ border-color:#33C6B0; }
+  .logged-in-info{ font-size:.82rem; color:#4FB57F; font-weight:700; display:none; }
+  /* ===== Panel debug (?debug=1) ===== */
+  #debugPanel{
+    max-width:420px; margin:0 auto 14px; background:#0D1420; border:1px dashed #E8A33D80;
+    border-radius:10px; padding:12px 14px; font-size:.72rem; color:#8D98AC; line-height:1.7;
+    white-space:pre-wrap; word-break:break-word; display:none;
+  }
+  #debugPanel b{ color:#E8A33D; }
+</style>
+</head>
+<body>
 
+<!-- ===========================================================
+  CARA PAKAI DI SETIAP LANDING PAGE (repo GitHub Pages berbeda):
+  1. Copy blok <div class="box">...</div> dan <script> di bawah ini
+     ke halaman landing page Anda.
+  2. Copy juga file assets/config.js dari project ini ke repo LP
+     tersebut (isi sudah sama, tidak perlu diubah lagi).
+  3. Ganti "PILIH_SALAH_SATU" pada SOURCE_LP_NAME sesuai nama LP
+     ini di tabel landing_pages (harus sama persis dengan nama
+     yang ada di tab Pengaturan dashboard).
+  4. Tombol "Order Sekarang" di halaman index.html sebaiknya kirim
+     PARAMETER "service_id" (bukan cuma nama layanan), karena ID
+     tidak pernah salah ketik/beda spasi seperti nama. Format:
+       order-form-example.html?service_id=<uuid dari service_types>&paket=Fitur%20Komplit
+     Parameter "layanan=<nama persis>" tetap didukung sebagai fallback
+     kalau tombol belum diupdate untuk kirim service_id.
+
+  ⚠️ PENTING — SUPABASE AUTH REDIRECT URL:
+  Supaya login Google/Facebook kembali ke HALAMAN INI (bukan balik ke
+  index.html/homepage default), buka Supabase Dashboard > Authentication
+  > URL Configuration > Redirect URLs, dan tambahkan (pakai wildcard):
+    https://nafatech.web.id/**
+    https://rifkyanhar.github.io/**
+  Kalau URL persis halaman ini tidak ada di daftar itu, Supabase akan
+  otomatis redirect ke "Site URL" default (biasanya homepage) setelah
+  login berhasil -- ini penyebab paling umum kenapa customer "kembali
+  ke tampilan awal" alih-alih lanjut ke pembayaran.
+
+  ALUR PEMBAYARAN (per revisi terbaru):
+  Customer isi form -> order disimpan ke database -> kalau belum login,
+  diarahkan login Google/Facebook -> setelah kembali ke halaman ini,
+  form OTOMATIS lanjut kirim order & ke Midtrans (tidak perlu klik dua
+  kali) -> customer diarahkan ke halaman bayar Midtrans SAAT ITU JUGA.
+  Pekerjaan baru dimulai admin setelah payment_status berubah jadi
+  "paid" (dikonfirmasi otomatis oleh webhook Midtrans).
+
+  LAYANAN TERKUNCI (harga & alur fix, lihat LOCKED_SERVICES di script):
+  - Web App Absensi Guru — Fitur Khusus Rp750.000 / Fitur Komplit Rp3.750.000
+  - Web App Absensi Digital Instansi (ADI) — Fitur Khusus Rp750.000 / Fitur Komplit Rp3.750.000
+  - Web App Menu Resto QR (Meja Pintar) — Fitur Khusus Rp750.000 / Fitur Komplit Rp6.750.000
+    + WAJIB centang: pemilik usaha akan daftar sistem pembayaran digital
+      otomatis Midtrans di https://nafatech.web.id/promo
+    + Paket ditentukan dari parameter ?paket=Fitur%20Khusus atau
+      ?paket=Fitur%20Komplit di URL. Kalau parameter tidak ada/tidak
+      cocok, form jatuh ke tier pertama (Fitur Khusus) -- pakai
+      ?debug=1 untuk lihat persis paket apa yang terbaca.
+  - Jasa Pembuatan Website — Rp4.900.000 (sudah termasuk domain 1 tahun)
+    + Tidak ada opsi "sesuai demo" (custom by nature) -> customer WAJIB
+      isi catatan detail kebutuhan, dikirim ke tim via notifikasi email.
+
+  Nama-nama di atas HARUS SAMA PERSIS (case-insensitive, spasi
+  dirapikan otomatis) dengan kolom "name" di tabel service_types
+  Supabase supaya ke-detect sebagai locked service -- TAPI cara paling
+  aman adalah pakai service_id (lihat poin 4 di atas), karena itu tidak
+  bisa salah ketik. Layanan lain di luar 4 ini otomatis jadi mode
+  KONSULTASI: tanpa harga, tanpa domain, tanpa Midtrans -- setelah
+  order tersimpan, customer diarahkan ke chat WhatsApp 6285290078889.
+
+  KOLOM TAMBAHAN DI TABEL "orders" YANG PERLU ADA DI SUPABASE:
+  domain_name (text), domain_ext (text), domain_contact_method (text),
+  domain_wa (text), domain_email (text), webapp_type (text: 'demo'/'custom'),
+  midtrans_registration_ack (bool)
+=========================================================== -->
+
+<div id="debugPanel"></div>
+
+<div class="box">
+  <h2 style="margin-top:0">Form Order</h2>
+  <label>Nama</label>
+  <input id="o_name" placeholder="Nama Anda" autocomplete="name" />
+  <label>No. WhatsApp / Email</label>
+  <input id="o_contact" placeholder="08xxxxxxxxxx" autocomplete="tel" />
+  <label>Jenis pekerjaan</label>
+  <select id="o_service"></select>
+  <div class="hint" id="serviceLockHint" style="display:none;">🔒 Layanan ini sudah ditentukan dari halaman asal Anda dan tidak bisa diganti di sini.</div>
+  <div id="o_tier_wrap" style="display:none;">
+    <label>Paket / tingkat kesulitan</label>
+    <select id="o_tier"></select>
+  </div>
+  <a id="o_wa_consult" href="#" target="_blank" style="display:block; text-align:center; margin-top:10px; font-size:.82rem; color:#33C6B0; text-decoration:none;">💬 Konsultasi dulu via WhatsApp sebelum order</a>
+
+  <!-- ===== Harga terkunci (muncul kalau layanan yang dipilih termasuk locked service) ===== -->
+  <div class="price-box" id="lockedPriceBox" style="display:none;">
+    <span id="lockedPriceLabel">Total Paket</span>
+    <span class="pv" id="lockedPriceValue"></span>
+  </div>
+  <div class="hint" id="lockedPriceNote" style="display:none;">Sudah termasuk domain (masa berlaku 1 tahun).</div>
+
+  <!-- ===== Blok domain (wajib untuk locked service) ===== -->
+  <div class="sub-block" id="domainBlock" style="display:none;">
+    <label>Nama Domain yang Diinginkan</label>
+    <input id="o_domain_name" placeholder="Contoh: tokoanda">
+    <label>Ekstensi Domain</label>
+    <select id="o_domain_ext">
+      <option value=".com">.com</option>
+      <option value=".id">.id</option>
+    </select>
+    <label>Kalau nama domain tidak tersedia, hubungi saya lewat</label>
+    <div class="radio-choice">
+      <label id="pickDomainWA"><input type="radio" name="o_domain_contact_method" value="wa" checked> WhatsApp</label>
+      <label id="pickDomainEmail"><input type="radio" name="o_domain_contact_method" value="email"> Email</label>
+    </div>
+    <div id="domainWaWrap">
+      <label>Nomor WhatsApp untuk Dihubungi</label>
+      <input id="o_domain_wa" placeholder="08xxxxxxxxxx">
+    </div>
+    <div id="domainEmailWrap" style="display:none;">
+      <label>Alamat Email untuk Dihubungi</label>
+      <input id="o_domain_email" type="email" placeholder="nama@email.com">
+    </div>
+    <div class="hint">💡 Kalau nama domain yang dipesan ternyata tidak tersedia, Tim NAFA Tech akan segera menghubungi Anda lewat kontak di atas untuk mendiskusikan nama alternatif.</div>
+  </div>
+
+  <!-- ===== Blok tipe web app: sesuai demo vs request pribadi ===== -->
+  <div class="sub-block" id="webappTypeBlock" style="display:none;">
+    <label>Tipe Web App yang Dipilih</label>
+    <div class="radio-choice" id="webappTypeChoice">
+      <label id="pickDemo"><input type="radio" name="o_webapp_type" value="demo" checked> Sesuai akun demo</label>
+      <label id="pickCustom"><input type="radio" name="o_webapp_type" value="custom"> Request pribadi</label>
+    </div>
+    <div class="demo-info" id="demoInfoBox" style="display:none;">
+      🔗 Web app Anda akan dibuat mengikuti tampilan &amp; fitur akun demo berikut:<br>
+      <a id="demoInfoLink" href="#" target="_blank"></a>
+    </div>
+  </div>
+
+  <!-- ===== Khusus Jasa Pembuatan Website: langsung wajib request pribadi ===== -->
+  <div class="hint" id="customOnlyNote" style="display:none;">📝 Layanan ini custom sepenuhnya — mohon ceritakan detail kebutuhan Anda di kolom Catatan di bawah (wajib diisi), tim kami akan mempelajarinya lewat notifikasi yang masuk ke email kami.</div>
+
+  <!-- ===== Khusus Menu Resto QR: wajib centang daftar Midtrans ===== -->
+  <div class="ack-box" id="mejaPintarAckBox" style="display:none;">
+    <label>
+      <input type="checkbox" id="o_midtrans_ack">
+      <span>⚠️ <b>Wajib:</b> pemilik usaha diwajibkan mendaftarkan sistem pembayaran digital otomatis Midtrans untuk kelengkapan Menu Resto QR ini, sesuai ketentuan yang berlaku di <b>nafatech.web.id/promo</b>. Tim kami akan membantu proses pendaftarannya setelah order masuk.</span>
+    </label>
+  </div>
+
+  <!-- ===== Login Google/Facebook (wajib sebelum lanjut ke Midtrans, khusus layanan berbayar) ===== -->
+  <div class="auth-box" id="authBox" style="display:none;">
+    <div class="auth-note">🔐 Untuk keamanan transaksi pembayaran otomatis, mohon masuk dengan akun Google atau Facebook dulu sebelum lanjut ke pembayaran. Data form di atas (termasuk paket domain di sini) tidak akan hilang.</div>
+    <div class="login-btns" id="authLoginBtns">
+      <button type="button" id="authLoginGoogle">
+        <svg width="16" height="16" viewBox="0 0 18 18" style="flex:none;">
+          <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+          <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+        </svg>
+        Masuk dengan Google
+      </button>
+      <button type="button" id="authLoginFacebook">
+        <svg width="16" height="16" viewBox="0 0 36 36" style="flex:none;">
+          <path fill="#1877F2" d="M36 18c0-9.941-8.059-18-18-18S0 8.059 0 18c0 8.981 6.581 16.428 15.188 17.785V23.203h-4.57V18h4.57v-3.97c0-4.512 2.688-7.005 6.8-7.005 1.97 0 4.03.352 4.03.352v4.43h-2.27c-2.237 0-2.935 1.389-2.935 2.814V18h4.996l-.799 5.203h-4.197v12.582C29.419 34.428 36 26.981 36 18z"/>
+        </svg>
+        Masuk dengan Facebook
+      </button>
+    </div>
+    <div class="logged-in-info" id="authLoggedInInfo"></div>
+  </div>
+
+  <label id="notesLabel">Catatan (opsional)</label>
+  <textarea id="o_notes" rows="3" placeholder="Detail kebutuhan Anda"></textarea>
+
+  <!-- ===== Honeypot anti-spam bot — JANGAN dihapus, JANGAN diisi ===== -->
+  <div class="hp-field" aria-hidden="true">
+    <label for="o_website">Website</label>
+    <input type="text" id="o_website" name="o_website" tabindex="-1" autocomplete="off">
+  </div>
+
+  <button id="submitBtn">Kirim Order &amp; Lanjut Bayar</button>
+  <div id="msg"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script src="assets/config.js"></script>
+<script>
+  // Nama landing page ini PERSIS seperti yang didaftarkan di tab
+  // "Pengaturan" pada dashboard (tabel landing_pages).
+  const DEFAULT_LP_NAME = "Jasa Meja Pintar";
+  const urlParams = new URLSearchParams(window.location.search);
+  const SOURCE_LP_NAME = urlParams.get('lp') || DEFAULT_LP_NAME;
+  const DEBUG = urlParams.get('debug') === '1';
+
+  const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
+  emailjs.init({ publicKey: window.NAFA_CONFIG.EMAILJS_PUBLIC_KEY });
+
+  let SERVICE_TYPES = [];
+  let SERVICE_TIERS = [];
+  let LP_ID = null;
+  const WA_NUMBER = "6285290078889";
+
+  // Rapikan string supaya perbandingan nama tidak gagal cuma gara-gara
+  // spasi ganda, spasi di ujung, atau beda kapitalisasi.
+  function normalize(str){
+    return (str || '').replace(/\s+/g, ' ').trim().toLowerCase();
+  }
+
+  const debugLog = [];
+  function dbg(label, value){
+    if(!DEBUG) return;
+    debugLog.push(`<b>${label}:</b> ${typeof value === 'object' ? JSON.stringify(value) : value}`);
+    const panel = document.getElementById('debugPanel');
+    panel.style.display = 'block';
+    panel.innerHTML = debugLog.join('\n');
+  }
+
+  // ---------- Layanan terkunci: harga & alur fix, TIDAK mengikuti harga di tabel service_types ----------
+  // "match" harus sama persis (case-insensitive, spasi dirapikan) dengan kolom name di service_types.
+  // Cara paling aman untuk mengunci dari tombol landing page: kirim
+  // "service_id" (UUID dari service_types.id) di URL, bukan cuma nama.
+  const LOCKED_SERVICES = [
+    {
+      match: "Jasa Pembuatan Web App Absensi Guru",
+      tiers: {
+        "Fitur Khusus": 750000,
+        "Fitur Komplit": 3750000
+      },
+      demoUrl: "https://rifkyanhar.github.io/Absensi-Guru/",
+      forceCustomRequest: false,
+      requiresMidtransAck: false
+    },
+    {
+      match: "Jasa Pembuatan Web App Absensi Digital Instansi",
+      tiers: {
+        "Fitur Khusus": 750000,
+        "Fitur Komplit": 3750000
+      },
+      demoUrl: "https://rifkyanhar.github.io/demo-ADI/",
+      forceCustomRequest: false,
+      requiresMidtransAck: false
+    },
+    {
+      match: "Jasa pembuatan web app sistem pesan menu resto QR",
+      tiers: {
+        "Fitur Khusus": 750000,
+        "Fitur Komplit": 6750000
+      },
+      demoUrl: "https://rifkyanhar.github.io/Meja-Pintar/",
+      forceCustomRequest: false,
+      requiresMidtransAck: true
+    },
+    {
+      match: "Jasa Pembuatan Website",
+      tiers: { "Paket Reguler": 4900000 },
+      demoUrl: null,
+      forceCustomRequest: true, // tidak ada demo tunggal -> wajib request pribadi
+      requiresMidtransAck: false
+    }
+  ];
+
+  function getLockedConfig(serviceId){
+    const s = SERVICE_TYPES.find(x => x.id === serviceId);
+    if(!s) return null;
+    return LOCKED_SERVICES.find(l => normalize(l.match) === normalize(s.name)) || null;
+  }
+
+  // Layanan dengan >1 tier (Fitur Khusus / Fitur Komplit) menentukan
+  // paketnya lewat parameter ?paket= di URL. Kalau parameter tidak
+  // ada/tidak cocok, jatuh ke tier pertama yang didefinisikan.
+  function getSelectedPaket(locked){
+    const tierNames = Object.keys(locked.tiers);
+    if(tierNames.length <= 1) return tierNames[0];
+    const paketParam = normalize(urlParams.get('paket'));
+    const found = tierNames.find(t => normalize(t) === paketParam);
+    dbg('paket param dibaca', urlParams.get('paket') || '(kosong)');
+    dbg('paket ke-detect', found || `TIDAK COCOK -> fallback ke "${tierNames[0]}"`);
+    return found || tierNames[0];
+  }
+
+  function getLockedPrice(locked){
+    return locked.tiers[getSelectedPaket(locked)];
+  }
+
+  function fmtRupiah(v){ return 'Rp' + Number(v).toLocaleString('id-ID'); }
+
+  // Dicatat begitu halaman selesai dimuat. Kalau form disubmit kurang
+  // dari 3 detik setelah halaman dibuka, hampir pasti itu bot. Setelah
+  // kembali dari login OAuth (auto-continue), pengecekan ini otomatis
+  // lolos karena waktu yang sudah berlalu sejak page load pertama kali
+  // (session localStorage), bukan sejak reload.
+  const PAGE_LOADED_AT = Date.now();
+  const MIN_FILL_TIME_MS = 3000;
+
+  function refreshTierOptions(){
+    const serviceSelect = document.getElementById('o_service');
+    const serviceId = serviceSelect.value;
+    const locked = getLockedConfig(serviceId);
+    const tierWrap = document.getElementById('o_tier_wrap');
+    const tierSelect = document.getElementById('o_tier');
+    // Layanan terkunci harganya fix, tidak pakai paket/tier.
+    if(locked){
+      tierWrap.style.display = 'none';
+      tierSelect.innerHTML = '';
+      refreshWaLink();
+      updateExtraFieldsUI();
+      return;
+    }
+    const tiers = SERVICE_TIERS.filter(t => t.service_type_id === serviceId && t.active);
+    if(tiers.length > 0){
+      tierWrap.style.display = 'block';
+      tierSelect.innerHTML = tiers.map(t => `<option value="${t.id}" data-hours="${t.estimated_hours}">${t.tier_name} — Rp${Number(t.price).toLocaleString('id-ID')}</option>`).join('');
+    } else {
+      tierWrap.style.display = 'none';
+      tierSelect.innerHTML = '';
+    }
+    refreshWaLink();
+    updateExtraFieldsUI();
+  }
+
+  function refreshWaLink(){
+    const opt = document.getElementById('o_service').selectedOptions[0];
+    const serviceName = opt ? opt.textContent : '';
+    const text = encodeURIComponent(`Hai kak, saya mau konsultasi dulu soal ${serviceName || 'layanan NAFA Tech'} sebelum order, terimakasih`);
+    document.getElementById('o_wa_consult').href = `https://wa.me/${WA_NUMBER}?text=${text}`;
+  }
+
+  // ---------- Tampilkan/sembunyikan blok harga, domain, tipe web app, ack Midtrans ----------
+  // PERUBAHAN PENTING: semua blok (domain, tipe web app, ack Midtrans,
+  // login) sekarang langsung tampil begitu layanan terkunci terdeteksi
+  // -- TIDAK lagi menunggu Nama & Kontak diisi dulu. Sebelumnya blok-blok
+  // ini disembunyikan sampai nama+kontak terisi, yang membuatnya
+  // terlihat seperti "hilang"/"tidak nampak" padahal cuma nunggu.
+  // Validasi nama & kontak tetap dilakukan saat submit, bukan lewat
+  // sembunyi-tampilkan blok.
+  function updateExtraFieldsUI(){
+    const serviceId = document.getElementById('o_service').value;
+    const locked = getLockedConfig(serviceId);
+    const submitBtn = document.getElementById('submitBtn');
+
+    dbg('service_id terpilih', serviceId || '(kosong)');
+    dbg('locked config ketemu?', locked ? locked.match : 'TIDAK ADA -> mode konsultasi WhatsApp');
+
+    const lockedPriceBox = document.getElementById('lockedPriceBox');
+    const lockedPriceNote = document.getElementById('lockedPriceNote');
+    const domainBlock = document.getElementById('domainBlock');
+    const webappTypeBlock = document.getElementById('webappTypeBlock');
+    const customOnlyNote = document.getElementById('customOnlyNote');
+    const demoInfoBox = document.getElementById('demoInfoBox');
+    const mejaPintarAckBox = document.getElementById('mejaPintarAckBox');
+    const authBox = document.getElementById('authBox');
+    const notesLabel = document.getElementById('notesLabel');
+    const notesEl = document.getElementById('o_notes');
+
+    if(!locked){
+      lockedPriceBox.style.display = 'none';
+      lockedPriceNote.style.display = 'none';
+      domainBlock.style.display = 'none';
+      webappTypeBlock.style.display = 'none';
+      customOnlyNote.style.display = 'none';
+      mejaPintarAckBox.style.display = 'none';
+      authBox.style.display = 'none';
+      notesLabel.textContent = 'Catatan (opsional)';
+      notesEl.required = false;
+      submitBtn.textContent = 'Kirim Order — Konsultasi via WhatsApp';
+      return;
+    }
+
+    const selectedPaket = getSelectedPaket(locked);
+    const lockedPrice = getLockedPrice(locked);
+    const hasMultipleTiers = Object.keys(locked.tiers).length > 1;
+
+    dbg('harga terkunci final', fmtRupiah(lockedPrice));
+
+    lockedPriceBox.style.display = 'flex';
+    document.getElementById('lockedPriceLabel').textContent = hasMultipleTiers ? `Total Paket — ${selectedPaket}` : 'Total Paket';
+    document.getElementById('lockedPriceValue').textContent = fmtRupiah(lockedPrice);
+    lockedPriceNote.style.display = 'block';
+
+    domainBlock.style.display = 'block';
+    mejaPintarAckBox.style.display = locked.requiresMidtransAck ? 'block' : 'none';
+    authBox.style.display = 'block';
+    refreshAuthUI();
+
+    if(locked.forceCustomRequest){
+      // Jasa Pembuatan Website: tidak ada opsi demo, langsung wajib catatan detail.
+      webappTypeBlock.style.display = 'none';
+      customOnlyNote.style.display = 'block';
+      notesLabel.textContent = 'Detail Kebutuhan (WAJIB diisi)';
+      notesEl.required = true;
+    } else {
+      webappTypeBlock.style.display = 'block';
+      customOnlyNote.style.display = 'none';
+      const chosen = document.querySelector('input[name="o_webapp_type"]:checked').value;
+      document.getElementById('pickDemo').classList.toggle('picked', chosen === 'demo');
+      document.getElementById('pickCustom').classList.toggle('picked', chosen === 'custom');
+      if(chosen === 'demo'){
+        demoInfoBox.style.display = 'block';
+        document.getElementById('demoInfoLink').href = locked.demoUrl;
+        document.getElementById('demoInfoLink').textContent = locked.demoUrl;
+        notesLabel.textContent = 'Catatan (opsional)';
+        notesEl.required = false;
+      } else {
+        demoInfoBox.style.display = 'none';
+        notesLabel.textContent = 'Detail Kebutuhan (WAJIB diisi)';
+        notesEl.required = true;
+      }
+    }
+
+    submitBtn.textContent = `Kirim Order & Lanjut Bayar (${fmtRupiah(lockedPrice)})`;
+  }
+
+  document.querySelectorAll('input[name="o_webapp_type"]').forEach(r => r.addEventListener('change', updateExtraFieldsUI));
+
+  function setupDomainContactChoice(){
+    const waLabel = document.getElementById('pickDomainWA');
+    const emailLabel = document.getElementById('pickDomainEmail');
+    const waWrap = document.getElementById('domainWaWrap');
+    const emailWrap = document.getElementById('domainEmailWrap');
+    function refresh(){
+      const method = document.querySelector('input[name="o_domain_contact_method"]:checked').value;
+      waLabel.classList.toggle('picked', method==='wa');
+      emailLabel.classList.toggle('picked', method==='email');
+      waWrap.style.display = method==='wa' ? '' : 'none';
+      emailWrap.style.display = method==='email' ? '' : 'none';
+    }
+    document.querySelectorAll('input[name="o_domain_contact_method"]').forEach(r=>r.addEventListener('change', refresh));
+    refresh();
+  }
+  setupDomainContactChoice();
+
+  // ---------- Login Google/Facebook (syarat sebelum lanjut ke Midtrans) ----------
+  // Karena OAuth redirect me-reload halaman, isian form disimpan dulu ke
+  // localStorage sebelum redirect, lalu dikembalikan setelah customer
+  // berhasil login (lihat restoreFormSnapshot() di initForm()). Setelah
+  // dikembalikan, form OTOMATIS lanjut submit (lihat initForm) supaya
+  // customer tidak perlu klik tombol dua kali.
+  const PENDING_KEY = 'nafa_pending_order_v1';
+  const AUTOSUBMIT_GUARD_KEY = 'nafa_autosubmit_guard_v1';
+
+  function collectFormSnapshot(){
+    const domainMethodEl = document.querySelector('input[name="o_domain_contact_method"]:checked');
+    const webappTypeEl = document.querySelector('input[name="o_webapp_type"]:checked');
+    return {
+      name: document.getElementById('o_name').value,
+      contact: document.getElementById('o_contact').value,
+      service_type_id: document.getElementById('o_service').value,
+      notes: document.getElementById('o_notes').value,
+      domain_name: document.getElementById('o_domain_name').value,
+      domain_ext: document.getElementById('o_domain_ext').value,
+      domain_contact_method: domainMethodEl ? domainMethodEl.value : 'wa',
+      domain_wa: document.getElementById('o_domain_wa').value,
+      domain_email: document.getElementById('o_domain_email').value,
+      webapp_type: webappTypeEl ? webappTypeEl.value : 'demo',
+      midtrans_ack: document.getElementById('o_midtrans_ack').checked,
+      page_loaded_at: PAGE_LOADED_AT
+    };
+  }
+
+  function restoreFormSnapshot(snap){
+    if(!snap) return;
+    document.getElementById('o_name').value = snap.name || '';
+    document.getElementById('o_contact').value = snap.contact || '';
+    const sel = document.getElementById('o_service');
+    if(snap.service_type_id && !sel.disabled && [...sel.options].some(o => o.value === snap.service_type_id)){
+      sel.value = snap.service_type_id;
+    }
+    document.getElementById('o_notes').value = snap.notes || '';
+    document.getElementById('o_domain_name').value = snap.domain_name || '';
+    document.getElementById('o_domain_ext').value = snap.domain_ext || '.com';
+    if(snap.domain_contact_method){
+      const r = document.querySelector(`input[name="o_domain_contact_method"][value="${snap.domain_contact_method}"]`);
+      if(r) r.checked = true;
+    }
+    document.getElementById('o_domain_wa').value = snap.domain_wa || '';
+    document.getElementById('o_domain_email').value = snap.domain_email || '';
+    if(snap.webapp_type){
+      const r = document.querySelector(`input[name="o_webapp_type"][value="${snap.webapp_type}"]`);
+      if(r) r.checked = true;
+    }
+    if(typeof snap.midtrans_ack === 'boolean'){
+      document.getElementById('o_midtrans_ack').checked = snap.midtrans_ack;
+    }
+    refreshTierOptions();
+    setupDomainContactChoice();
+    updateExtraFieldsUI();
+  }
+
+  async function refreshAuthUI(){
+    const { data } = await sb.auth.getSession();
+    const loginBtns = document.getElementById('authLoginBtns');
+    const loggedInInfo = document.getElementById('authLoggedInInfo');
+    if(data.session){
+      loginBtns.style.display = 'none';
+      loggedInInfo.style.display = 'block';
+      loggedInInfo.textContent = '✓ Masuk sebagai ' + (data.session.user.email || data.session.user.user_metadata?.full_name || 'Pengguna') + ' — silakan lanjut kirim order.';
+    } else {
+      loginBtns.style.display = 'flex';
+      loggedInInfo.style.display = 'none';
+    }
+  }
+
+  async function startOAuthLogin(provider){
+    localStorage.setItem(PENDING_KEY, JSON.stringify(collectFormSnapshot()));
+    // redirectTo dibuat eksplisit dari origin+pathname+search halaman
+    // INI, supaya Supabase tahu customer harus dikembalikan ke sini --
+    // tapi ini hanya berfungsi kalau URL ini (atau pattern wildcard-nya)
+    // sudah terdaftar di Supabase Authentication > URL Configuration >
+    // Redirect URLs. Lihat catatan besar di komentar HTML paling atas.
+    const redirectTarget = window.location.origin + window.location.pathname + window.location.search;
+    dbg('redirectTo dikirim ke Supabase', redirectTarget);
+    await sb.auth.signInWithOAuth({ provider, options: { redirectTo: redirectTarget } });
+  }
+  document.getElementById('authLoginGoogle').addEventListener('click', () => startOAuthLogin('google'));
+  document.getElementById('authLoginFacebook').addEventListener('click', () => startOAuthLogin('facebook'));
+  sb.auth.onAuthStateChange(() => { refreshAuthUI(); });
+
+  async function initForm(){
+    const { data: services } = await sb.from('service_types').select('*').eq('active', true);
+    SERVICE_TYPES = services || [];
+    document.getElementById('o_service').innerHTML = SERVICE_TYPES.map(s => `<option value="${s.id}" data-hours="${s.default_hours}">${s.name}</option>`).join('');
+    dbg('service_types dimuat', SERVICE_TYPES.map(s => s.name));
+
+    const { data: tiers } = await sb.from('service_tiers').select('*').eq('active', true);
+    SERVICE_TIERS = tiers || [];
+
+    // Kalau halaman ini dibuka dari tombol "Order Sekarang" di landing page,
+    // KUNCI dropdown ke layanan itu -- bukan cuma preselect, karena select
+    // yang sekadar di-preselect tetap bisa diganti manual oleh customer.
+    // Prioritas: service_id (paling aman, tidak pernah salah ketik) lalu
+    // fallback ke layanan (cocokkan nama, sudah dirapikan spasinya).
+    const serviceIdParam = urlParams.get('service_id');
+    const preselectName = urlParams.get('layanan');
+    const serviceSelect = document.getElementById('o_service');
+    dbg('service_id param', serviceIdParam || '(kosong)');
+    dbg('layanan param', preselectName || '(kosong)');
+
+    let match = null;
+    if(serviceIdParam){
+      match = SERVICE_TYPES.find(s => s.id === serviceIdParam);
+      if(!match) console.warn('[NAFA Tech] service_id="' + serviceIdParam + '" tidak ditemukan di tabel service_types.');
+    }
+    if(!match && preselectName){
+      match = SERVICE_TYPES.find(s => normalize(s.name) === normalize(preselectName));
+      if(!match) console.warn('[NAFA Tech] Parameter layanan="' + preselectName + '" tidak cocok persis dengan kolom "name" manapun di tabel service_types.');
+    }
+
+    if(match){
+      serviceSelect.innerHTML = `<option value="${match.id}" data-hours="${match.default_hours}">${match.name}</option>`;
+      serviceSelect.value = match.id;
+      serviceSelect.disabled = true;
+      serviceSelect.style.opacity = '0.75';
+      serviceSelect.style.cursor = 'not-allowed';
+      document.getElementById('serviceLockHint').style.display = 'block';
+    } else if(serviceIdParam || preselectName){
+      // Ada parameter tapi tidak ketemu -- form tetap jalan sebagai form
+      // terbuka (tidak lock), dan ini ditampilkan langsung di halaman
+      // (bukan cuma di console) supaya ketahuan segera.
+      const warnBox = document.createElement('div');
+      warnBox.style.cssText = 'background:#3A2410;border:1px solid #B87F1F;color:#F2A93B;border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.6;margin:14px 0;';
+      warnBox.textContent = '⚠️ Layanan dari link ini belum ketemu otomatis di daftar. Mohon pilih layanan yang benar secara manual di bawah ini sebelum lanjut.';
+      serviceSelect.before(warnBox);
+    }
+
+    refreshTierOptions();
+    document.getElementById('o_service').addEventListener('change', refreshTierOptions);
+    document.getElementById('o_tier').addEventListener('change', refreshWaLink);
+    document.getElementById('o_name').addEventListener('input', updateExtraFieldsUI);
+    document.getElementById('o_contact').addEventListener('input', updateExtraFieldsUI);
+
+    const { data: lps } = await sb.from('landing_pages').select('*').eq('name', SOURCE_LP_NAME);
+    if(lps && lps.length > 0) LP_ID = lps[0].id;
+    dbg('landing_page cocok?', lps && lps.length > 0 ? SOURCE_LP_NAME : `TIDAK KETEMU untuk nama "${SOURCE_LP_NAME}"`);
+
+    // Kalau baru saja kembali dari redirect login Google/Facebook dan
+    // ada isian form yang sempat disimpan, kembalikan lagi ke form ini
+    // DAN langsung lanjut kirim order + ke Midtrans secara otomatis --
+    // supaya customer tidak perlu klik tombol "Kirim Order" lagi.
+    const pending = localStorage.getItem(PENDING_KEY);
+    if(pending){
+      const { data: sessionData } = await sb.auth.getSession();
+      if(sessionData.session){
+        let snap = null;
+        try{ snap = JSON.parse(pending); }catch(e){}
+        localStorage.removeItem(PENDING_KEY);
+        if(snap){
+          restoreFormSnapshot(snap);
+          const msgEl = document.getElementById('msg');
+          msgEl.style.color = "#4FB57F";
+          msgEl.textContent = "✓ Login berhasil! Melanjutkan order Anda ke pembayaran...";
+          // Guard supaya tidak submit dobel kalau halaman ini di-refresh lagi.
+          const alreadyAutoSubmitted = sessionStorage.getItem(AUTOSUBMIT_GUARD_KEY);
+          if(!alreadyAutoSubmitted){
+            sessionStorage.setItem(AUTOSUBMIT_GUARD_KEY, '1');
+            setTimeout(() => submitOrder(), 400);
+          }
+        }
+      } else {
+        localStorage.removeItem(PENDING_KEY);
+      }
+    }
+  }
+  initForm();
+
+  // ---------- Logika kirim order, dipisah jadi fungsi tersendiri supaya ----------
+  // bisa dipanggil dari klik tombol MAUPUN otomatis setelah login OAuth.
+  async function submitOrder(){
+    const submitBtn = document.getElementById('submitBtn');
+    const msgEl = document.getElementById('msg');
+
+    if(submitBtn.disabled) return;
+    submitBtn.disabled = true;
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.textContent = 'Mengirim...';
+
+    // ---- Honeypot ----
+    const honeypot = document.getElementById('o_website').value.trim();
+    if(honeypot !== ''){
+      msgEl.style.color = "#4FB57F";
+      msgEl.textContent = "Order terkirim! Nomor antrian Anda akan dikonfirmasi.";
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      return;
+    }
+
+    // ---- Cek kecepatan pengisian ----
+    const fillTime = Date.now() - PAGE_LOADED_AT;
+    if(fillTime < MIN_FILL_TIME_MS){
+      msgEl.style.color = "#E06B54";
+      msgEl.textContent = "Mohon isi form dengan lengkap terlebih dahulu.";
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      return;
+    }
+
+    const customer_name = document.getElementById('o_name').value.trim();
+    const contact = document.getElementById('o_contact').value.trim();
+    const service_type_id = document.getElementById('o_service').value;
+    let notes = document.getElementById('o_notes').value.trim();
+    const opt = document.getElementById('o_service').selectedOptions[0];
+    const estimated_hours = opt ? Number(opt.dataset.hours) : 4;
+    const tierSelect = document.getElementById('o_tier');
+    const tier_id = tierSelect && tierSelect.value ? tierSelect.value : null;
+
+    if(!customer_name || !contact || !service_type_id){
+      msgEl.textContent = "Mohon lengkapi nama, kontak, dan jenis pekerjaan.";
+      msgEl.style.color = "#E06B54";
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      return;
+    }
+
+    const locked = getLockedConfig(service_type_id);
+    let extraFields = {};
+    let price = null;
+
+    if(locked){
+      price = getLockedPrice(locked);
+      const hasMultipleTiers = Object.keys(locked.tiers).length > 1;
+      if(hasMultipleTiers){
+        const selectedPaket = getSelectedPaket(locked);
+        notes = `[Paket: ${selectedPaket}]` + (notes ? `\n${notes}` : '');
+      }
+
+      const domain_name = document.getElementById('o_domain_name').value.trim();
+      const domain_ext = document.getElementById('o_domain_ext').value;
+      const domain_contact_method = document.querySelector('input[name="o_domain_contact_method"]:checked').value;
+      const domain_wa = document.getElementById('o_domain_wa').value.trim();
+      const domain_email = document.getElementById('o_domain_email').value.trim();
+
+      if(!domain_name){
+        msgEl.textContent = "Nama domain wajib diisi.";
+        msgEl.style.color = "#E06B54";
+        submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+        return;
+      }
+      if(domain_contact_method === 'wa' && !domain_wa){
+        msgEl.textContent = "Nomor WhatsApp untuk dihubungi soal domain wajib diisi.";
+        msgEl.style.color = "#E06B54";
+        submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+        return;
+      }
+      if(domain_contact_method === 'email' && !domain_email){
+        msgEl.textContent = "Alamat email untuk dihubungi soal domain wajib diisi.";
+        msgEl.style.color = "#E06B54";
+        submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+        return;
+      }
+
+      let webapp_type;
+      if(locked.forceCustomRequest){
+        webapp_type = 'custom';
+        if(!notes){
+          msgEl.textContent = "Mohon ceritakan detail kebutuhan Anda di kolom Catatan (wajib untuk layanan ini).";
+          msgEl.style.color = "#E06B54";
+          submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+          return;
+        }
+      } else {
+        webapp_type = document.querySelector('input[name="o_webapp_type"]:checked').value;
+        if(webapp_type === 'custom' && !notes){
+          msgEl.textContent = "Mohon ceritakan detail kebutuhan Anda di kolom Catatan (wajib untuk request pribadi).";
+          msgEl.style.color = "#E06B54";
+          submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+          return;
+        }
+      }
+
+      let midtrans_registration_ack = null;
+      if(locked.requiresMidtransAck){
+        midtrans_registration_ack = document.getElementById('o_midtrans_ack').checked;
+        if(!midtrans_registration_ack){
+          msgEl.textContent = "Mohon centang persetujuan pendaftaran sistem pembayaran digital Midtrans terlebih dahulu.";
+          msgEl.style.color = "#E06B54";
+          submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+          return;
+        }
+      }
+
+      // ---- Wajib login Google/Facebook sebelum lanjut ke Midtrans ----
+      const { data: sessionData } = await sb.auth.getSession();
+      if(!sessionData.session){
+        msgEl.textContent = "Mohon masuk dengan Google atau Facebook dulu (tombol login di atas) sebelum lanjut ke pembayaran.";
+        msgEl.style.color = "#E06B54";
+        submitBtn.disabled = false; submitBtn.textContent = originalBtnText;
+        document.getElementById('authBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      extraFields = {
+        domain_name, domain_ext, domain_contact_method,
+        domain_wa: domain_contact_method === 'wa' ? domain_wa : null,
+        domain_email: domain_contact_method === 'email' ? domain_email : null,
+        webapp_type,
+        midtrans_registration_ack
+      };
+    }
+
+    const { data, error } = await sb.from('orders').insert({
+      customer_name, contact, service_type_id, landing_page_id: LP_ID,
+      notes, estimated_hours, tier_id: locked ? null : tier_id, status: 'waiting',
+      price,
+      ...extraFields
+      // payment_status TIDAK diisi manual -> default 'unpaid', baru jadi
+      // 'paid' lewat webhook Midtrans setelah customer benar-benar bayar.
+      // Untuk layanan konsultasi (locked === null), price null & tidak
+      // pernah lewat Midtrans -- admin follow-up manual via WhatsApp.
+    }).select().single();
+
+    if(error){
+      msgEl.textContent = "Gagal mengirim order: " + error.message;
+      msgEl.style.color = "#E06B54";
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      return;
+    }
+
+    // Notifikasi email ke tim (tetap dikirim walau belum bayar / walau
+    // konsultasi, supaya admin tetap tahu ada order/permintaan masuk).
+    let emailWarning = '';
+    try{
+      const serviceName = SERVICE_TYPES.find(s => s.id === service_type_id)?.name || '-';
+      await emailjs.send(window.NAFA_CONFIG.EMAILJS_SERVICE_ID, window.NAFA_CONFIG.EMAILJS_TEMPLATE_ID, {
+        to_email: window.NAFA_CONFIG.NOTIF_EMAIL,
+        email: window.NAFA_CONFIG.NOTIF_EMAIL,
+        queue_number: data.queue_number,
+        customer_name, contact, service_name: serviceName,
+        source_lp: SOURCE_LP_NAME,
+        notes: notes || '-',
+        order_time: new Date(data.created_at).toLocaleString('id-ID')
+      });
+    }catch(e){
+      emailWarning = ' (Notifikasi email GAGAL: ' + (e?.text || e?.message || JSON.stringify(e)) + ')';
+    }
+
+    // ---- Layanan konsultasi (di luar 4 locked service): arahkan ke WhatsApp, TIDAK ke Midtrans ----
+    if(!locked){
+      msgEl.style.color = emailWarning ? "#E8A33D" : "#4FB57F";
+      msgEl.textContent = `Order diterima! Nomor antrian Anda: #${data.queue_number}${emailWarning} — mengarahkan ke WhatsApp untuk konsultasi...`;
+      submitBtn.textContent = 'Menuju WhatsApp...';
+      const serviceName = SERVICE_TYPES.find(s => s.id === service_type_id)?.name || '-';
+      const waText = encodeURIComponent(
+        `Halo NAFA Tech, saya ${customer_name} baru saja mengirim order #${data.queue_number} untuk konsultasi layanan "${serviceName}". ` +
+        `Catatan: ${notes || '-'}. Mohon info lebih lanjut ya, terimakasih.`
+      );
+      window.location.href = `https://wa.me/${WA_NUMBER}?text=${waText}`;
+      return;
+    }
+
+    msgEl.style.color = emailWarning ? "#E8A33D" : "#4FB57F";
+    msgEl.textContent = `Order diterima! Nomor antrian Anda: #${data.queue_number}${emailWarning} — mengarahkan ke halaman pembayaran...`;
+    submitBtn.textContent = 'Menuju pembayaran...';
+
+    // ---- Buat link pembayaran Midtrans & langsung arahkan customer ke sana ----
+    try{
+      const payRes = await fetch(`${window.NAFA_CONFIG.SUPABASE_URL}/functions/v1/create-payment`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${window.NAFA_CONFIG.SUPABASE_ANON_KEY}`,
+          'apikey': window.NAFA_CONFIG.SUPABASE_ANON_KEY
+        },
+        body: JSON.stringify({ order_id: data.id })
+      });
+      const payResult = await payRes.json();
+      dbg('respons create-payment', payResult);
+      if(payResult.redirect_url){
+        window.location.href = payResult.redirect_url;
+        return;
+      } else {
+        msgEl.style.color = "#E06B54";
+        msgEl.textContent = `Order tersimpan (#${data.queue_number}), tapi link pembayaran gagal dibuat (${payResult.error ? JSON.stringify(payResult.error) : 'unknown error'}). Hubungi kami via WhatsApp, sebutkan nomor antrian Anda.`;
+      }
+    }catch(payErr){
+      msgEl.style.color = "#E06B54";
+      msgEl.textContent = `Order tersimpan (#${data.queue_number}), tapi gagal membuka halaman pembayaran: ${payErr.message}. Hubungi kami via WhatsApp, sebutkan nomor antrian Anda.`;
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Order Tersimpan — Hubungi WA untuk Bayar';
+  }
+
+  document.getElementById('submitBtn').addEventListener('click', submitOrder);
+</script>
+</body>
+</html>
