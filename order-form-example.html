@@ -1,1 +1,26 @@
-
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dialihkan — NAFA Tech</title>
+<!--
+  File ini SENGAJA dikosongkan dan diganti jadi halaman redirect.
+  Form order yang sebenarnya sekarang ada di pesan.html (satu sistem
+  untuk semua landing page), bukan di sini lagi. Kalau ada bookmark
+  atau link lama yang masih mengarah ke file ini (misalnya dari
+  landing page "Jasa Meja Pintar"), redirect di bawah ini yang
+  meneruskannya ke pesan.html, sambil membawa parameter ?layanan=
+  dan ?lp= apa adanya supaya tidak kehilangan konteks produk/asal.
+-->
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const target = "pesan.html" + (params.toString() ? ("?" + params.toString()) : "");
+  window.location.replace(target);
+</script>
+<meta http-equiv="refresh" content="0; url=pesan.html">
+</head>
+<body>
+  <p>Halaman ini sudah dipindahkan. Kalau tidak otomatis teralihkan, <a href="pesan.html">klik di sini</a>.</p>
+</body>
+</html>
