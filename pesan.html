@@ -58,6 +58,19 @@
   .contact-choice label.picked{border-color:var(--mint);color:var(--text);}
   .addon-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
 
+  /* Midtrans OPSIONAL (resto QR & website donasi): tutorial baru muncul kalau dicentang */
+  .mt-opt-box{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px 15px;margin-bottom:16px;
+  }
+  .mt-opt-toggle{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+  .mt-opt-toggle input{width:auto;margin-top:3px;flex:none;}
+  .mt-opt-toggle .at-title{font-weight:700;font-size:14px;}
+  .mt-opt-toggle .at-title em{font-style:normal;font-weight:500;color:var(--muted);}
+  .mt-opt-detail{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .mt-opt-detail a{color:var(--mint);font-weight:600;text-decoration:underline;}
+  .mt-opt-skip{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
   .total-box{
     display:flex;justify-content:space-between;align-items:center;
     background:var(--panel-2);border:1px solid var(--line);border-radius:12px;
@@ -153,6 +166,19 @@
         </div>
       </div>
 
+      <!-- Midtrans OPSIONAL: hanya tampil untuk Menu Resto QR & Website Donasi. Tutorial baru muncul bila dicentang. -->
+      <div class="mt-opt-box" id="midtransOptBox" style="display:none;">
+        <label class="mt-opt-toggle">
+          <input type="checkbox" id="p_midtrans_wanted">
+          <div class="at-title">💳 Saya ingin mengaktifkan pembayaran otomatis lewat Midtrans <em>(opsional)</em></div>
+        </label>
+        <div class="mt-opt-detail" id="midtransOptDetail" style="display:none;">
+          <span id="midtransOptText"></span><br>
+          <a href="https://rifkyanhar.github.io/tutorial-merchant-midtrans" target="_blank" rel="noopener">Lihat cara daftar merchant Midtrans →</a>
+        </div>
+        <div class="mt-opt-skip">Boleh dilewati — lanjutkan saja ke tahap berikutnya.</div>
+      </div>
+
       <div class="total-box" id="totalBox" style="display:none;">
         <span class="tl">Total Estimasi</span>
         <span class="tv" id="totalValue">Rp0</span>
@@ -224,6 +250,43 @@ function isConsultationService(s){
   return price === null || price === undefined || Number(price) === 0;
 }
 
+// ---------- Midtrans OPSIONAL (Menu Resto QR & Website Donasi) ----------
+// Dulu pendaftaran merchant Midtrans diwajibkan. Sekarang cuma pilihan:
+// kalau pelanggan mencentang, penjelasan + link tutorial baru tampil dan
+// pilihannya dicatat di kolom notes order (ikut masuk email notifikasi &
+// dashboard CRM) supaya tim bisa mengirim panduan. Kalau tidak dicentang,
+// pesanan langsung berjalan ke tahap berikutnya seperti biasa.
+// Dikenali lewat UUID layanan resto QR, atau lewat nama layanan.
+const MIDTRANS_OPTIONAL_IDS = [
+  'cb203d77-4aea-4337-8354-f26d5e9657a0', // Menu Resto QR - Fitur Khusus
+  '49f968be-0a69-4f9e-aba6-d2949827a226'  // Menu Resto QR - Fitur Komplit
+];
+const MIDTRANS_TEXT_RESTO = 'Dengan Midtrans (berizin Bank Indonesia & Kominfo), pembayaran pelanggan resto Anda masuk otomatis lewat sistem dan lebih cepat diproses. Prosesnya cukup sekali di awal dan dipandu langkah demi langkah.';
+const MIDTRANS_TEXT_DONASI = 'Dengan Midtrans (berizin Bank Indonesia & Kominfo), donasi masuk otomatis tanpa perlu mencocokkan bukti transfer satu per satu. Prosesnya cukup sekali di awal dan dipandu langkah demi langkah.';
+function midtransOptionalTextFor(service){
+  if(!service) return null;
+  const name = (service.name || '').toLowerCase();
+  if(MIDTRANS_OPTIONAL_IDS.includes(service.id) || name.includes('menu resto')) return MIDTRANS_TEXT_RESTO;
+  if(name.includes('website donasi')) return MIDTRANS_TEXT_DONASI;
+  return null;
+}
+function refreshMidtransOpt(service){
+  const box = document.getElementById('midtransOptBox');
+  const chk = document.getElementById('p_midtrans_wanted');
+  const text = (service && !isConsultationService(service)) ? midtransOptionalTextFor(service) : null;
+  if(text){
+    box.style.display = '';
+    document.getElementById('midtransOptText').textContent = text;
+  } else {
+    box.style.display = 'none';
+    chk.checked = false;
+  }
+  document.getElementById('midtransOptDetail').style.display = chk.checked ? 'block' : 'none';
+}
+document.getElementById('p_midtrans_wanted').addEventListener('change', (e)=>{
+  document.getElementById('midtransOptDetail').style.display = e.target.checked ? 'block' : 'none';
+});
+
 // ---------- Diskon otomatis: upgrade dari Langganan Bulanan ke OTP ----------
 // Kalau kontak (WA/email) yang diisi customer PERNAH tercatat berlangganan
 // produk yang sama, otomatis potong harga OTP sebesar 1 bulan harga
@@ -246,6 +309,7 @@ const SUBSCRIPTION_PRODUCT_ID_MAP = {
   '20d8ca04-4835-4aeb-97a3-2f9a3341256f': 'absensi-guru',           // Jasa Pembuatan Web App Absensi Guru
   'abf8924a-6726-4775-85ba-cd2f30431b5f': 'absensi-instansi',       // Jasa Pembuatan Web App Absensi Digital Instansi
   'cb203d77-4aea-4337-8354-f26d5e9657a0': 'menu-resto-qr',          // Jasa Pembuatan Menu Resto Scan Barcode (QR Code)
+  // 'UUID-WEBSITE-DONASI-OTP': 'web-donasi',                       // (opsional) Jasa Pembuatan Website Donasi -- sudah tercakup pemetaan nama di bawah
 };
 // Fallback berbasis nama, dipakai HANYA kalau service.id tidak ada di
 // map UUID di atas (misalnya untuk produk lama yang belum diberi UUID).
@@ -253,7 +317,8 @@ const SUBSCRIPTION_PRODUCT_NAME_MAP = {
   'jasa pembuatan web app absensi guru': 'absensi-guru',
   'jasa pembuatan web app absensi digital instansi': 'absensi-instansi',
   'jasa pembuatan menu resto scan barcode (qr code)': 'menu-resto-qr',
-  'jasa pembuatan web app sistem pesan menu resto qr': 'menu-resto-qr' // alias lama, jaga-jaga
+  'jasa pembuatan web app sistem pesan menu resto qr': 'menu-resto-qr', // alias lama, jaga-jaga
+  'jasa pembuatan website donasi': 'web-donasi'  // HARUS ada juga di SUBSCRIPTION_PRICES Edge Function check-subscription-discount
 };
 
 async function findSubscriptionDiscount(contact, service){
@@ -362,6 +427,9 @@ async function loadServices(){
     if(warningBox) warningBox.style.display = 'block';
   }
 
+  // Pilihan Midtrans dari halaman asal (?midtrans=ya) ikut dicentang otomatis
+  if(params.get('midtrans') === 'ya') document.getElementById('p_midtrans_wanted').checked = true;
+
   select.addEventListener('change', updatePriceUI);
   updatePriceUI();
 }
@@ -372,7 +440,7 @@ async function updatePriceUI(){
   const totalBox = document.getElementById('totalBox');
   const totalValue = document.getElementById('totalValue');
   const authBox = document.getElementById('authBox');
-  if(!service){ addonBox.style.display='none'; totalBox.style.display='none'; authBox.style.display='none'; return; }
+  if(!service){ addonBox.style.display='none'; totalBox.style.display='none'; authBox.style.display='none'; refreshMidtransOpt(null); return; }
 
   if(isConsultationService(service)){
     // Layanan konsultasi: tanpa opsi domain, tanpa total harga otomatis,
@@ -383,9 +451,11 @@ async function updatePriceUI(){
     document.getElementById('addonFields').classList.remove('open');
     totalBox.style.display = 'none';
     authBox.style.display = 'none';
+    refreshMidtransOpt(null);
     return;
   }
   addonBox.style.display = '';
+  refreshMidtransOpt(service);
   const base = Number(servicePrice(service)) || 0;
   const addonOn = document.getElementById('p_addon_domain').checked;
   const contact = document.getElementById('p_contact').value.trim();
@@ -566,6 +636,13 @@ async function validateAndBuildOrder(){
       `Kontak konfirmasi ketersediaan: ${method==='wa' ? 'WhatsApp' : 'Email'} — ${domainContactVal}\n` +
       `(Kalau nama tidak tersedia, hubungi pelanggan lewat kontak di atas untuk nama alternatif.)`;
     finalNotes = (finalNotes || '') + addonBlock;
+  }
+
+  // Midtrans OPSIONAL: catat pilihan pelanggan (hanya bila dicentang) supaya
+  // tim tahu harus mengirim panduan daftar merchant Midtrans.
+  if(!isConsult && midtransOptionalTextFor(service) && document.getElementById('p_midtrans_wanted').checked){
+    finalNotes = (finalNotes || '') +
+      `\n\n— MIDTRANS (opsional): pelanggan ingin mengaktifkan pembayaran otomatis lewat Midtrans, mohon kirim panduan daftar merchant —`;
   }
 
   // Cek ulang diskon langganan di sini (bukan cuma pakai angka dari preview
