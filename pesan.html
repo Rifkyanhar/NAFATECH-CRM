@@ -92,6 +92,8 @@
   .login-btns button{padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
   .logged-in-info{font-size:13px;color:var(--ok);display:none;font-weight:700;}
 </style>
+<!-- Meta Pixel (skrip bersama dari nafatech.web.id; aktif juga di rifkyanhar.github.io/NAFATECH-CRM/) -->
+<script src="https://nafatech.web.id/assets/meta-pixel.js" defer></script>
 </head>
 <body>
 <div class="wrap">
@@ -265,6 +267,23 @@ if (window.emailjs && window.NAFA_CONFIG.EMAILJS_PUBLIC_KEY) {
 let SERVICE_TYPES = [];
 const DOMAIN_ADDON_PRICE = 250000;
 
+// ---------- Meta Pixel ----------
+// px() aman dipanggil kapan pun: kalau skrip pixel belum termuat, dicoba lagi sekali.
+// Tidak ada data pribadi (nama/kontak/email) yang dikirim ke Pixel.
+function px(name, params, onceKey){
+  if(window.nafaTrack){ window.nafaTrack(name, params, onceKey); }
+  else { setTimeout(() => { if(window.nafaTrack) window.nafaTrack(name, params, onceKey); }, 1500); }
+}
+function trackViewContent(){
+  const sel = document.getElementById('p_service');
+  const s = SERVICE_TYPES.find(x => x.id === (sel && sel.value));
+  if(!s) return;
+  px('ViewContent', {
+    content_name: s.name, content_ids: [s.id], content_type: 'product',
+    value: Number(servicePrice(s)) || 0, currency: 'IDR'
+  }, 'vc:' + s.id);
+}
+
 // Format email dasar: ada teks, satu @, ada titik di domain, tanpa spasi.
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
@@ -431,8 +450,9 @@ async function loadServices(){
   // Pilihan Midtrans dari halaman asal (?midtrans=ya) ikut dicentang otomatis
   if(params.get('midtrans') === 'ya') document.getElementById('p_midtrans_wanted').checked = true;
 
-  select.addEventListener('change', updatePriceUI);
+  select.addEventListener('change', () => { updatePriceUI(); trackViewContent(); });
   updatePriceUI();
+  trackViewContent();
 }
 
 // ---------- Ringkasan & tampilan bagian domain ----------
@@ -787,6 +807,11 @@ async function finalizeOrder(payload){
     customer_email: payload.customer_email, notes: payload.notes,
     serviceName: payload.serviceName, price: payload.price
   });
+
+  // Pixel: pesanan tersimpan. Konsultasi = Lead, berbayar = InitiateCheckout (lanjut ke Midtrans).
+  const pxItem = { content_name: payload.serviceName, content_ids: [payload.service_type_id], content_type: 'product' };
+  if(payload.isConsult){ px('Lead', pxItem); }
+  else { px('InitiateCheckout', { ...pxItem, value: Number(payload.price) || 0, currency: 'IDR' }); }
 
   if(payload.isConsult){
     document.getElementById('formArea').innerHTML =
