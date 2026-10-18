@@ -103,6 +103,32 @@
 
   <div class="card">
     <div id="formArea">
+      <!-- ===== Akun baru (Google/Facebook): lengkapi data sekali saja ===== -->
+      <div class="dom-box" id="profileBox" style="display:none;">
+        <div class="dom-title">🙋 Lengkapi Data Akun Baru <span class="chip ok">Sekali saja</span></div>
+        <p class="dom-desc">Akun Anda baru terdaftar. Isi data berikut sekali saja, lalu lanjutkan ke form pesanan di bawah. Isian pesanan Anda tidak hilang.</p>
+        <div class="field">
+          <label>Nama lengkap <span class="req">*</span></label>
+          <input id="pf_name" placeholder="Nama lengkap" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Nomor WhatsApp aktif <span class="req">*</span></label>
+          <input id="pf_wa" type="tel" inputmode="tel" placeholder="08xxxxxxxxxx" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input id="pf_email" type="email" inputmode="email" placeholder="nama@email.com" autocomplete="email">
+          <div class="field-hint" id="pfEmailHint">Disarankan sama dengan email akun masuk, supaya pesanan Anda terhubung ke Member Area.</div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Password Member Area <em style="font-style:normal;font-weight:500;">(opsional)</em></label>
+          <input id="pf_pass" type="password" minlength="6" placeholder="Minimal 6 karakter" autocomplete="new-password">
+          <div class="field-hint" id="pfPassHint">Isi bila Anda ingin masuk ke Member Area dengan email dan password. Boleh dikosongkan.</div>
+        </div>
+        <button type="button" class="btn-submit" id="pfSaveBtn" style="margin-top:14px;">Simpan & Lanjut ke Form Pesanan</button>
+        <div class="msg" id="pfMsg"></div>
+      </div>
+
       <div class="field">
         <label>Nama Anda <span class="req">*</span></label>
         <input id="p_customer" placeholder="Nama lengkap">
@@ -258,6 +284,71 @@
 <script>
 const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
 const PENDING_KEY = 'nafa_pesan_pending';
+
+// ---------- Penyimpanan sementara isian form (draft) ----------
+// Login Google/Facebook memuat ulang halaman, jadi isian form disimpan dulu
+// lalu dipulihkan otomatis sesudah kembali. Hanya disimpan di perangkat ini,
+// kedaluwarsa 2 jam, dan dihapus begitu pesanan terkirim.
+const DRAFT_KEY = 'nafa_pesan_draft';
+const DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
+const DRAFT_TEXT_IDS = ['p_customer','p_contact','p_email','p_notes','p_inc_name','p_inc_alt','p_domain_name','p_domain_alt','p_domain_wa','p_domain_email'];
+const DRAFT_CHECK_IDS = ['p_addon_domain','p_midtrans_wanted'];
+let _draftOff = false, _draftTimer = null;
+// sessionStorage + localStorage sekaligus: sebagian browser (mis. di dalam aplikasi) membuka
+// halaman login di tab/konteks lain sehingga sessionStorage saja bisa hilang.
+const store = {
+  set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} try{ localStorage.setItem(k, v); }catch(e){} },
+  get(k){
+    try{ const a = sessionStorage.getItem(k); if(a) return a; }catch(e){}
+    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  },
+  del(k){ try{ sessionStorage.removeItem(k); }catch(e){} try{ localStorage.removeItem(k); }catch(e){} }
+};
+function saveDraft(){
+  if(_draftOff) return;
+  try{
+    const d = { t: Date.now(), f:{}, c:{} };
+    let any = false;
+    DRAFT_TEXT_IDS.forEach(id => { const el = document.getElementById(id); if(el){ d.f[id] = el.value; if(el.value.trim()) any = true; } });
+    DRAFT_CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el) d.c[id] = el.checked; });
+    if(!any) return;
+    d.ext = document.getElementById('p_domain_ext').value;
+    d.service = document.getElementById('p_service').value;
+    const m = document.querySelector('input[name="p_domain_contact_method"]:checked');
+    d.method = m ? m.value : 'wa';
+    store.set(DRAFT_KEY, JSON.stringify(d));
+  }catch(e){}
+}
+function scheduleSaveDraft(){ clearTimeout(_draftTimer); _draftTimer = setTimeout(saveDraft, 400); }
+function clearDraft(){ _draftOff = true; clearTimeout(_draftTimer); store.del(DRAFT_KEY); }
+function restoreDraft(){
+  let d = null;
+  try{ d = JSON.parse(store.get(DRAFT_KEY) || 'null'); }catch(e){}
+  if(!d || !d.t || Date.now() - d.t > DRAFT_TTL_MS){ store.del(DRAFT_KEY); return false; }
+  const sel = document.getElementById('p_service');
+  if(d.service && !sel.disabled && Array.from(sel.options).some(o => o.value === d.service)) sel.value = d.service;
+  DRAFT_TEXT_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el && d.f && d.f[id] != null && !el.value) el.value = d.f[id];
+  });
+  DRAFT_CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el && d.c && d.c[id]) el.checked = true; });
+  if(d.ext) document.getElementById('p_domain_ext').value = d.ext;
+  document.getElementById('addonFields').classList.toggle('open', document.getElementById('p_addon_domain').checked);
+  const r = document.querySelector('input[name="p_domain_contact_method"][value="' + d.method + '"]');
+  if(r){ r.checked = true; r.dispatchEvent(new Event('change')); }
+  window.__draftRestored = true;
+  return true;
+}
+async function showRestoredNote(){
+  if(!window.__draftRestored) return;
+  const el = document.getElementById('formMsg');
+  if(!el) return;
+  const { data: { session } } = await sb.auth.getSession();
+  el.className = 'msg success';
+  if(session && needsProfile(CURRENT_USER)) el.textContent = '✓ Anda sudah masuk dan isian form dipulihkan. Satu langkah lagi: lengkapi data akun baru di bagian atas halaman.';
+  else if(session) el.textContent = '✓ Anda sudah masuk dan isian form sudah dipulihkan. Periksa lagi datanya, lalu klik "Kirim Pesanan & Lanjut Bayar".';
+  else el.textContent = 'Isian form sebelumnya sudah dipulihkan.';
+}
 
 // Inisialisasi EmailJS (notifikasi email ke NOTIF_EMAIL setiap ada order baru)
 if (window.emailjs && window.NAFA_CONFIG.EMAILJS_PUBLIC_KEY) {
@@ -451,6 +542,7 @@ async function loadServices(){
   if(params.get('midtrans') === 'ya') document.getElementById('p_midtrans_wanted').checked = true;
 
   select.addEventListener('change', () => { updatePriceUI(); trackViewContent(); });
+  restoreDraft();   // pulihkan isian form (mis. setelah login Google/Facebook) sebelum harga & kotak domain dirender
   updatePriceUI();
   trackViewContent();
 }
@@ -559,6 +651,9 @@ function updatePriceUI(){
   refreshAuthUI();
 }
 
+// Simpan isian otomatis setiap kali diubah (dipakai untuk pemulihan setelah login).
+['input','change'].forEach(ev => document.getElementById('formArea').addEventListener(ev, scheduleSaveDraft));
+
 // Tandai kolom email merah begitu formatnya salah, hilang begitu diperbaiki.
 document.getElementById('p_email').addEventListener('input', (e)=>{
   const v = e.target.value.trim();
@@ -595,6 +690,88 @@ function setupContactChoice(){
 }
 setupContactChoice();
 
+// ---------- Data akun (akun baru lewat Google/Facebook) ----------
+// Profil disimpan di user_metadata akun Supabase (tanpa tabel tambahan):
+//   full_name, wa_number (format 62...), contact_email, profile_complete (true bila sudah diisi).
+// Akun tanpa profile_complete dianggap baru: diminta melengkapi data sekali, lalu kembali ke form.
+let CURRENT_USER = null;
+const WA_PATTERN = /^62\d{8,13}$/;
+function needsProfile(u){ return !!u && !(u.user_metadata && u.user_metadata.profile_complete); }
+function normWA(v){
+  let d = String(v || '').replace(/[^\d]/g, '');
+  if(d.startsWith('0')) d = '62' + d.slice(1);
+  return d;
+}
+function waLocal(v){ return v ? '0' + String(v).replace(/^62/, '') : ''; }
+async function loadCurrentUser(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ CURRENT_USER = null; return null; }
+  let u = session.user;
+  try{ const r = await sb.auth.getUser(); if(r && r.data && r.data.user) u = r.data.user; }catch(e){}
+  CURRENT_USER = u;
+  return u;
+}
+// Isi kolom form yang masih kosong dari data profil (anggota lama tidak perlu mengetik ulang).
+function applyProfileToForm(u){
+  const m = u.user_metadata || {};
+  const set = (id, v) => { const el = document.getElementById(id); if(el && v && !el.value.trim()) el.value = v; };
+  set('p_customer', m.full_name || m.name);
+  set('p_contact', waLocal(m.wa_number));
+  set('p_email', m.contact_email || u.email);
+}
+function showProfileBox(u){
+  const m = u.user_metadata || {};
+  const val = id => (document.getElementById(id) || {}).value || '';
+  const fill = (id, v) => { const el = document.getElementById(id); if(el && !el.value.trim()) el.value = v || ''; };
+  fill('pf_name', m.full_name || m.name || val('p_customer'));
+  fill('pf_wa', waLocal(m.wa_number) || val('p_contact'));
+  fill('pf_email', m.contact_email || u.email || val('p_email'));
+  if(u.email){
+    document.getElementById('pfPassHint').textContent =
+      'Isi bila Anda ingin masuk ke Member Area dengan email dan password (login memakai ' + u.email + '). Boleh dikosongkan.';
+  }
+  document.getElementById('profileBox').style.display = '';
+}
+async function saveProfile(){
+  const msg = document.getElementById('pfMsg');
+  const btn = document.getElementById('pfSaveBtn');
+  const bad = (t, id) => { msg.className = 'msg error'; msg.textContent = t; const el = document.getElementById(id); if(el) el.focus(); };
+  msg.className = 'msg'; msg.textContent = '';
+  const name = document.getElementById('pf_name').value.trim();
+  const wa = normWA(document.getElementById('pf_wa').value);
+  const email = document.getElementById('pf_email').value.trim().toLowerCase();
+  const pass = document.getElementById('pf_pass').value;
+  if(name.length < 2) return bad('Nama lengkap wajib diisi.', 'pf_name');
+  if(!WA_PATTERN.test(wa)) return bad('Nomor WhatsApp belum benar. Contoh: 081234567890', 'pf_wa');
+  if(!EMAIL_PATTERN.test(email)) return bad('Format email belum benar. Contoh: nama@email.com', 'pf_email');
+  if(pass && pass.length < 6) return bad('Password minimal 6 karakter, atau kosongkan.', 'pf_pass');
+
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const attrs = { data: { full_name: name, wa_number: wa, contact_email: email, profile_complete: true } };
+  if(pass) attrs.password = pass;
+  const { data, error } = await sb.auth.updateUser(attrs);
+  btn.disabled = false; btn.textContent = 'Simpan & Lanjut ke Form Pesanan';
+  if(error){ return bad('Gagal menyimpan data akun: ' + error.message, 'pf_name'); }
+
+  CURRENT_USER = (data && data.user) || CURRENT_USER;
+  // Pindahkan data ke form pesanan (hanya kolom yang masih kosong, isian pelanggan tidak ditimpa).
+  const set = (id, v) => { const el = document.getElementById(id); if(el && !el.value.trim()) el.value = v; };
+  set('p_customer', name); set('p_contact', waLocal(wa)); set('p_email', email);
+  document.getElementById('profileBox').style.display = 'none';
+  saveDraft();
+  const fm = document.getElementById('formMsg');
+  fm.className = 'msg success';
+  fm.textContent = '✓ Data akun tersimpan. Periksa isian pesanan di bawah, lalu klik "Kirim Pesanan & Lanjut Bayar".';
+  document.getElementById('submitBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+document.getElementById('pfSaveBtn').addEventListener('click', saveProfile);
+async function initAccountStep(){
+  const u = await loadCurrentUser();
+  if(!u) return;
+  applyProfileToForm(u);
+  if(needsProfile(u)) showProfileBox(u);
+}
+
 // ---------- Login Google/Facebook (syarat sebelum lanjut ke Midtrans) ----------
 async function refreshAuthUI(){
   const { data } = await sb.auth.getSession();
@@ -617,9 +794,11 @@ async function refreshAuthUI(){
 }
 
 document.getElementById('authLoginGoogle').addEventListener('click', () => {
+  saveDraft();
   sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
 });
 document.getElementById('authLoginFacebook').addEventListener('click', () => {
+  saveDraft();
   sb.auth.signInWithOAuth({ provider: 'facebook', options: { redirectTo: window.location.href } });
 });
 
@@ -801,6 +980,8 @@ async function finalizeOrder(payload){
     return;
   }
 
+  clearDraft();   // pesanan sudah tersimpan -> isian sementara tidak diperlukan lagi
+
   // Notifikasi email ke tim (tidak ditunggu -- kalau gagal, pesanan tetap tersimpan).
   sendEmailNotification({
     customer_name: payload.customer_name, contact: payload.contact,
@@ -862,9 +1043,21 @@ async function handleSubmitClick(){
   // Layanan berbayar -> wajib login Google/Facebook dulu (syarat Midtrans)
   const { data: { session } } = await sb.auth.getSession();
   if(session){
+    const u = CURRENT_USER || await loadCurrentUser();
+    if(needsProfile(u)){
+      // Akun baru: lengkapi data akun dulu (isian pesanan tetap aman di form).
+      saveDraft();
+      showProfileBox(u);
+      const m = document.getElementById('formMsg');
+      m.className = 'msg error';
+      m.textContent = 'Satu langkah lagi: lengkapi dulu data akun baru Anda di bagian atas, lalu klik kirim lagi.';
+      document.getElementById('profileBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
     await finalizeOrder(payload);
   } else {
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify(payload));
+    saveDraft();
+    store.set(PENDING_KEY, JSON.stringify(payload));
     const msgEl = document.getElementById('formMsg');
     msgEl.className = 'msg';
     msgEl.textContent = 'Data pesanan Anda sudah disimpan sementara. Silakan masuk dengan Google/Facebook di bawah untuk melanjutkan ke pembayaran.';
@@ -876,20 +1069,26 @@ async function handleSubmitClick(){
 // data pesanan yang sempat "ditahan" di sessionStorage, lanjutkan otomatis
 // tanpa customer perlu isi ulang form atau klik kirim lagi.
 async function resumePendingOrderIfAny(){
-  const pendingRaw = sessionStorage.getItem(PENDING_KEY);
-  if(!pendingRaw) return;
+  const pendingRaw = store.get(PENDING_KEY);
+  if(!pendingRaw) return false;
   const { data: { session } } = await sb.auth.getSession();
-  if(session){
-    sessionStorage.removeItem(PENDING_KEY);
-    const payload = JSON.parse(pendingRaw);
-    // Pesanan lama yang sempat tertahan sebelum kolom Email diwajibkan
-    // tidak punya email -- pakai email akun login sebagai cadangan.
-    if(!payload.customer_email) payload.customer_email = (session.user.email || '').toLowerCase();
-    await finalizeOrder(payload);
-  }
+  if(!session) return false;
+  const cu = CURRENT_USER || await loadCurrentUser();
+  if(needsProfile(cu)){ store.del(PENDING_KEY); return false; }   // akun baru: lengkapi profil dulu, jangan kirim otomatis
+  store.del(PENDING_KEY);
+  let payload;
+  try{ payload = JSON.parse(pendingRaw); }catch(e){ return false; }
+  // Pesanan lama yang sempat tertahan sebelum kolom Email diwajibkan
+  // tidak punya email -- pakai email akun login sebagai cadangan.
+  if(!payload.customer_email) payload.customer_email = (session.user.email || '').toLowerCase();
+  await finalizeOrder(payload);
+  return true;
 }
 
-loadServices().then(resumePendingOrderIfAny);
+loadServices()
+  .then(initAccountStep)
+  .then(resumePendingOrderIfAny)
+  .then(resumed => { if(!resumed) return showRestoredNote(); });
 </script>
 </body>
 </html>
