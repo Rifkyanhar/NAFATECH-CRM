@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#FAF8F4" />
+<title>Pesan Layanan — NAFA Tech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FAF8F4; --panel:#FFFFFF; --panel-2:#F7F5F0; --line:rgba(20,33,74,.14);
+    --text:#14214A; --muted:#5E6685; --accent:#C2490F; --btn:#CF4A12;
+    --ok:#15803D; --warn:#B45309; --err:#B91C1C; --peach:#FDEEE5; --navy:#16224F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Manrope',-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 16px 40px;-webkit-font-smoothing:antialiased;line-height:1.5;}
+  .wrap{max-width:480px;margin:0 auto;}
+  h1{font-size:24px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px;}
+  .sub{color:var(--muted);font-size:13.5px;margin-bottom:22px;line-height:1.55;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,33,74,.04);}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;font-weight:700;}
+  .field .req{color:var(--err);}
+  .field-hint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5;}
+  .field input,.field select,.field textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);color:var(--text);font-family:inherit;
+    padding:12px 13px;border-radius:12px;font-size:15px;outline:none;
+  }
+  .field input:focus,.field select:focus,.field textarea:focus{border-color:#E8682D;background:#fff;box-shadow:0 0 0 3px rgba(232,104,45,.15);}
+  .field input.invalid{border-color:var(--err);}
+  .field textarea{min-height:100px;resize:vertical;}
+  .promo-badge{display:inline-block;background:var(--peach);color:var(--accent);border:1px solid #F7CDB5;font-size:11px;font-weight:800;padding:4px 11px;border-radius:100px;margin-bottom:14px;}
+  .btn-submit{width:100%;background:var(--btn);color:#fff;border:none;border-radius:12px;font-family:inherit;padding:15px;font-size:15px;font-weight:800;cursor:pointer;}
+  .btn-submit:hover:not(:disabled){background:#B83F0D;}
+  .btn-submit:disabled{opacity:.5;cursor:not-allowed;}
+  .msg{font-size:13.5px;margin-top:12px;line-height:1.5;}
+  .msg.error{color:var(--err);}
+  .msg.success{color:var(--ok);}
+  .price-tag{color:var(--accent);font-weight:800;}
+  .empty-state{color:var(--muted);font-size:14px;text-align:center;padding:30px 10px;}
+
+  /* ---- Bagian pemilihan nama domain ---- */
+  .dom-box,.addon-box,.mt-opt-box,.auth-box,.total-box{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:16px;
+  }
+  .dom-title{font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
+  .chip{font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:4px 9px;border-radius:999px;}
+  .chip.ok{background:#E2F3E9;color:var(--ok);}
+  .dom-desc{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+  .drow{display:flex;gap:8px;align-items:stretch;}
+  .drow input{flex:1;min-width:0;}
+  .dsuffix{flex:none;display:flex;align-items:center;padding:0 12px;background:#fff;border:1px solid var(--line);border-radius:12px;font-weight:800;font-size:14px;color:var(--text);}
+  .drow select{flex:none;width:96px;}
+  .dhint{font-size:12px;margin-top:6px;line-height:1.5;min-height:18px;color:var(--muted);}
+  .dhint.ok{color:var(--ok);font-weight:600;}
+  .dhint.bad{color:var(--err);font-weight:600;}
+  .addon-toggle{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+  .addon-toggle input{width:auto;margin-top:3px;flex:none;accent-color:var(--btn);}
+  .addon-toggle .at-title{font-weight:800;font-size:14px;}
+  .addon-toggle .at-desc{color:var(--muted);font-size:12.5px;margin-top:2px;line-height:1.5;}
+  .addon-fields{margin-top:14px;padding-top:14px;border-top:1px dashed var(--line);display:none;}
+  .addon-fields.open{display:block;}
+  .contact-choice{display:flex;gap:8px;margin-bottom:10px;}
+  .contact-choice label{
+    flex:1;display:flex;align-items:center;justify-content:center;gap:6px;background:#fff;border:1.5px solid var(--line);border-radius:12px;
+    padding:10px 8px;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;margin:0;
+  }
+  .contact-choice input{width:auto;margin:0;accent-color:var(--btn);}
+  .contact-choice label.picked{border-color:#E8682D;color:var(--text);}
+  .addon-note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:8px;}
+  .dsum{font-size:13px;line-height:1.7;}
+  .dsum b{color:var(--text);}
+  .dsum .t{font-weight:800;font-size:13.5px;margin-bottom:4px;}
+
+  /* Midtrans OPSIONAL */
+  .mt-opt-toggle{display:flex;align-items:flex-start;gap:10px;cursor:pointer;}
+  .mt-opt-toggle input{width:auto;margin-top:3px;flex:none;accent-color:var(--btn);}
+  .mt-opt-toggle .at-title{font-weight:800;font-size:14px;}
+  .mt-opt-toggle .at-title em{font-style:normal;font-weight:500;color:var(--muted);}
+  .mt-opt-detail{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted);line-height:1.6;}
+  .mt-opt-detail a{color:var(--accent);font-weight:700;text-decoration:underline;}
+  .mt-opt-skip{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;}
+
+  .total-box{display:flex;justify-content:space-between;align-items:center;}
+  .total-box .tl{font-size:13px;color:var(--muted);}
+  .total-box .tv{font-size:20px;font-weight:800;color:var(--accent);}
+
+  .auth-note{font-size:12.5px;color:var(--muted);line-height:1.6;margin-bottom:12px;}
+  .login-btns{display:flex;flex-direction:column;gap:8px;margin-bottom:6px;}
+  .login-btns button{padding:12px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;}
+  .logged-in-info{font-size:13px;color:var(--ok);display:none;font-weight:700;}
+</style>
+<!-- Meta Pixel (skrip bersama dari nafatech.web.id; aktif juga di rifkyanhar.github.io/NAFATECH-CRM/) -->
+<script src="https://nafatech.web.id/assets/meta-pixel.js" defer></script>
+</head>
+<body>
+<div class="wrap">
+  <div id="promoBadgeWrap"></div>
+  <h1>Pesan Layanan NAFA Tech</h1>
+  <p class="sub">Isi data di bawah, tim kami akan segera menghubungi Anda untuk konfirmasi.</p>
+
+  <div class="card">
+    <div id="formArea">
+      <!-- ===== Akun baru (Google/Facebook): lengkapi data sekali saja ===== -->
+      <div class="dom-box" id="profileBox" style="display:none;">
+        <div class="dom-title">🙋 Lengkapi Data Akun Baru <span class="chip ok">Sekali saja</span></div>
+        <p class="dom-desc">Akun Anda baru terdaftar. Isi data berikut sekali saja, lalu lanjutkan ke form pesanan di bawah. Isian pesanan Anda tidak hilang.</p>
+        <div class="field">
+          <label>Nama lengkap <span class="req">*</span></label>
+          <input id="pf_name" placeholder="Nama lengkap" autocomplete="name">
+        </div>
+        <div class="field">
+          <label>Nomor WhatsApp aktif <span class="req">*</span></label>
+          <input id="pf_wa" type="tel" inputmode="tel" placeholder="08xxxxxxxxxx" autocomplete="tel">
+        </div>
+        <div class="field">
+          <label>Email <span class="req">*</span></label>
+          <input id="pf_email" type="email" inputmode="email" placeholder="nama@email.com" autocomplete="email">
+          <div class="field-hint" id="pfEmailHint">Disarankan sama dengan email akun masuk, supaya pesanan Anda terhubung ke Member Area.</div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Password Member Area <em style="font-style:normal;font-weight:500;">(opsional)</em></label>
+          <input id="pf_pass" type="password" minlength="6" placeholder="Minimal 6 karakter" autocomplete="new-password">
+          <div class="field-hint" id="pfPassHint">Isi bila Anda ingin masuk ke Member Area dengan email dan password. Boleh dikosongkan.</div>
+        </div>
+        <button type="button" class="btn-submit" id="pfSaveBtn" style="margin-top:14px;">Simpan & Lanjut ke Form Pesanan</button>
+        <div class="msg" id="pfMsg"></div>
+      </div>
+
+      <div class="field">
+        <label>Nama Anda <span class="req">*</span></label>
+        <input id="p_customer" placeholder="Nama lengkap">
+      </div>
+      <div class="field">
+        <label>Kontak (WA aktif) <span class="req">*</span></label>
+        <input id="p_contact" placeholder="08xxxxxxxxxx">
+      </div>
+      <div class="field">
+        <label>Email <span class="req">*</span></label>
+        <input id="p_email" type="email" inputmode="email" autocomplete="email" placeholder="nama@email.com">
+        <div class="field-hint">Wajib diisi. Gunakan email yang sama saat mendaftar di Member Area NAFA Tech, supaya progress pengerjaan dan data produk pesanan Anda bisa dipantau di sana.</div>
+      </div>
+      <div class="field">
+        <label>Pilih Layanan</label>
+        <select id="p_service"></select>
+        <div id="serviceLockHint" class="msg" style="display:none; margin-top:8px; color:var(--muted);">
+          🔒 Layanan ini sudah ditentukan dari halaman asal Anda dan tidak bisa diganti di sini.
+        </div>
+        <div id="serviceMismatchWarning" class="msg error" style="display:none; margin-top:8px;">
+          ⚠️ Layanan dari link yang Anda klik tidak ketemu otomatis. Mohon pilih layanan yang benar secara manual di atas sebelum lanjut.
+        </div>
+      </div>
+
+      <!-- ===== Domain yang SUDAH TERMASUK paket (mis. .web.id untuk Web App Laundry) ===== -->
+      <div class="dom-box" id="incBox" style="display:none;">
+        <div class="dom-title">🌐 Pilih Nama Domain Anda <span class="chip ok">Termasuk paket</span></div>
+        <p class="dom-desc">Paket ini sudah termasuk domain <b class="incExt">.web.id</b> selama 1 tahun. Tentukan nama yang Anda inginkan, misalnya nama usaha Anda.</p>
+        <div class="field">
+          <label>Nama domain yang diinginkan <span class="req">*</span></label>
+          <div class="drow">
+            <input id="p_inc_name" placeholder="Contoh: laundrybersih" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <span class="dsuffix incExt">.web.id</span>
+          </div>
+          <div class="dhint" id="incHint"></div>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Nama cadangan (opsional)</label>
+          <div class="drow">
+            <input id="p_inc_alt" placeholder="Contoh: laundrybersihsemarang" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <span class="dsuffix incExt">.web.id</span>
+          </div>
+          <div class="dhint" id="incAltHint"></div>
+        </div>
+      </div>
+
+      <!-- ===== Domain berbayar (add-on) ===== -->
+      <div class="addon-box" id="addonBox">
+        <label class="addon-toggle">
+          <input type="checkbox" id="p_addon_domain">
+          <div>
+            <div class="at-title" id="addonTitle">🌐 Tambah Domain Berbayar <span class="price-tag">+Rp250.000</span></div>
+            <div class="at-desc" id="addonDesc">Opsional. Dapatkan nama domain sendiri (.com / .id) untuk website Anda, sekali bayar bersamaan dengan pesanan ini.</div>
+          </div>
+        </label>
+        <div class="addon-fields" id="addonFields">
+          <div class="field">
+            <label>Nama domain yang diinginkan <span class="req">*</span></label>
+            <div class="drow">
+              <input id="p_domain_name" placeholder="Contoh: kalasanmasfery" autocomplete="off" autocapitalize="none" spellcheck="false">
+              <select id="p_domain_ext" aria-label="Ekstensi domain">
+                <option value=".com">.com</option>
+                <option value=".id">.id</option>
+              </select>
+            </div>
+            <div class="dhint" id="addHint"></div>
+          </div>
+          <div class="field" style="margin-bottom:0;">
+            <label>Nama cadangan (opsional)</label>
+            <input id="p_domain_alt" placeholder="Contoh: kalasanmasferyid" autocomplete="off" autocapitalize="none" spellcheck="false">
+            <div class="dhint" id="addAltHint"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== Kontak konfirmasi ketersediaan domain (dipakai untuk semua pilihan domain) ===== -->
+      <div class="dom-box" id="domContactBox" style="display:none;">
+        <div class="dom-title">📞 Konfirmasi Ketersediaan Domain</div>
+        <p class="dom-desc">Kalau nama domain yang Anda pilih ternyata sudah dipakai, hubungi saya lewat:</p>
+        <div class="contact-choice">
+          <label id="pickWA"><input type="radio" name="p_domain_contact_method" value="wa" checked> WhatsApp</label>
+          <label id="pickEmail"><input type="radio" name="p_domain_contact_method" value="email"> Email</label>
+        </div>
+        <div class="field" id="domainWaWrap" style="margin-bottom:0;">
+          <label>Nomor WhatsApp untuk Dihubungi</label>
+          <input id="p_domain_wa" placeholder="08xxxxxxxxxx">
+        </div>
+        <div class="field" id="domainEmailWrap" style="display:none;margin-bottom:0;">
+          <label>Alamat Email untuk Dihubungi</label>
+          <input id="p_domain_email" type="email" placeholder="nama@email.com">
+        </div>
+        <div class="addon-note">💡 Ketersediaan nama domain kami cek setelah pesanan masuk. Bila tidak tersedia, Tim NAFA Tech akan menghubungi Anda untuk nama cadangan atau alternatif — sebelum pekerjaan dimulai.</div>
+      </div>
+
+      <!-- Ringkasan pilihan domain -->
+      <div class="dom-box" id="domSummary" style="display:none;"><div class="dsum" id="domSummaryBody"></div></div>
+
+      <!-- Midtrans OPSIONAL: hanya tampil untuk Menu Resto QR & Website Donasi. -->
+      <div class="mt-opt-box" id="midtransOptBox" style="display:none;">
+        <label class="mt-opt-toggle">
+          <input type="checkbox" id="p_midtrans_wanted">
+          <div class="at-title">💳 Saya ingin mengaktifkan pembayaran otomatis lewat Midtrans <em>(opsional)</em></div>
+        </label>
+        <div class="mt-opt-detail" id="midtransOptDetail" style="display:none;">
+          <span id="midtransOptText"></span><br>
+          <a href="https://rifkyanhar.github.io/tutorial-merchant-midtrans" target="_blank" rel="noopener">Lihat cara daftar merchant Midtrans →</a>
+        </div>
+        <div class="mt-opt-skip">Boleh dilewati — lanjutkan saja ke tahap berikutnya.</div>
+      </div>
+
+      <div class="total-box" id="totalBox" style="display:none;">
+        <span class="tl">Total Estimasi</span>
+        <span class="tv" id="totalValue">Rp0</span>
+      </div>
+
+      <!-- ===== Verifikasi login Google/Facebook sebelum lanjut ke Midtrans ===== -->
+      <div class="auth-box" id="authBox" style="display:none;">
+        <h3 style="font-size:15px;margin-bottom:10px;">🔐 Verifikasi Sebelum Bayar</h3>
+        <div class="auth-note">Untuk keamanan transaksi pembayaran otomatis, mohon masuk dengan akun Google atau Facebook terlebih dahulu. Data form di atas tidak akan hilang.</div>
+        <div class="login-btns" id="authLoginBtns">
+          <button type="button" id="authLoginGoogle">
+            <svg width="18" height="18" viewBox="0 0 18 18" style="flex:none;">
+              <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/>
+              <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+              <path fill="#FBBC05" d="M3.964 10.71c-.18-.54-.282-1.117-.282-1.71s.102-1.17.282-1.71V4.958H.957C.347 6.173 0 7.55 0 9s.348 2.827.957 4.042l3.007-2.332z"/>
+              <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+            </svg>
+            Masuk dengan Google
+          </button>
+          <button type="button" id="authLoginFacebook">
+            <svg width="18" height="18" viewBox="0 0 36 36" style="flex:none;">
+              <path fill="#1877F2" d="M36 18c0-9.941-8.059-18-18-18S0 8.059 0 18c0 8.981 6.581 16.428 15.188 17.785V23.203h-4.57V18h4.57v-3.97c0-4.512 2.688-7.005 6.8-7.005 1.97 0 4.03.352 4.03.352v4.43h-2.27c-2.237 0-2.935 1.389-2.935 2.814V18h4.996l-.799 5.203h-4.197v12.582C29.419 34.428 36 26.981 36 18z"/>
+            </svg>
+            Masuk dengan Facebook
+          </button>
+        </div>
+        <div class="logged-in-info" id="authLoggedInInfo"></div>
+      </div>
+
+      <div class="field">
+        <label>Detail / Catatan Pekerjaan</label>
+        <textarea id="p_notes" placeholder="Ceritakan kebutuhan Anda: nama instansi/resto/laundry, jumlah pengguna, fitur yang diinginkan, dll."></textarea>
+      </div>
+      <button class="btn-submit" id="submitBtn" onclick="handleSubmitClick()">Kirim Pesanan & Lanjut Bayar</button>
+      <div class="msg" id="formMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script src="assets/config.js"></script>
+<script>
+const sb = window.supabase.createClient(window.NAFA_CONFIG.SUPABASE_URL, window.NAFA_CONFIG.SUPABASE_ANON_KEY);
+const PENDING_KEY = 'nafa_pesan_pending';
+
+// ---------- Penyimpanan sementara isian form (draft) ----------
+// Login Google/Facebook memuat ulang halaman, jadi isian form disimpan dulu
+// lalu dipulihkan otomatis sesudah kembali. Hanya disimpan di perangkat ini,
+// kedaluwarsa 2 jam, dan dihapus begitu pesanan terkirim.
+const DRAFT_KEY = 'nafa_pesan_draft';
+const DRAFT_TTL_MS = 2 * 60 * 60 * 1000;
+const DRAFT_TEXT_IDS = ['p_customer','p_contact','p_email','p_notes','p_inc_name','p_inc_alt','p_domain_name','p_domain_alt','p_domain_wa','p_domain_email'];
+const DRAFT_CHECK_IDS = ['p_addon_domain','p_midtrans_wanted'];
+let _draftOff = false, _draftTimer = null;
+// sessionStorage + localStorage sekaligus: sebagian browser (mis. di dalam aplikasi) membuka
+// halaman login di tab/konteks lain sehingga sessionStorage saja bisa hilang.
+const store = {
+  set(k, v){ try{ sessionStorage.setItem(k, v); }catch(e){} try{ localStorage.setItem(k, v); }catch(e){} },
+  get(k){
+    try{ const a = sessionStorage.getItem(k); if(a) return a; }catch(e){}
+    try{ return localStorage.getItem(k); }catch(e){ return null; }
+  },
+  del(k){ try{ sessionStorage.removeItem(k); }catch(e){} try{ localStorage.removeItem(k); }catch(e){} }
+};
+function saveDraft(){
+  if(_draftOff) return;
+  try{
+    const d = { t: Date.now(), f:{}, c:{} };
+    let any = false;
+    DRAFT_TEXT_IDS.forEach(id => { const el = document.getElementById(id); if(el){ d.f[id] = el.value; if(el.value.trim()) any = true; } });
+    DRAFT_CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el) d.c[id] = el.checked; });
+    if(!any) return;
+    d.ext = document.getElementById('p_domain_ext').value;
+    d.service = document.getElementById('p_service').value;
+    const m = document.querySelector('input[name="p_domain_contact_method"]:checked');
+    d.method = m ? m.value : 'wa';
+    store.set(DRAFT_KEY, JSON.stringify(d));
+  }catch(e){}
+}
+function scheduleSaveDraft(){ clearTimeout(_draftTimer); _draftTimer = setTimeout(saveDraft, 400); }
+function clearDraft(){ _draftOff = true; clearTimeout(_draftTimer); store.del(DRAFT_KEY); }
+function restoreDraft(){
+  let d = null;
+  try{ d = JSON.parse(store.get(DRAFT_KEY) || 'null'); }catch(e){}
+  if(!d || !d.t || Date.now() - d.t > DRAFT_TTL_MS){ store.del(DRAFT_KEY); return false; }
+  const sel = document.getElementById('p_service');
+  if(d.service && !sel.disabled && Array.from(sel.options).some(o => o.value === d.service)) sel.value = d.service;
+  DRAFT_TEXT_IDS.forEach(id => {
+    const el = document.getElementById(id);
+    if(el && d.f && d.f[id] != null && !el.value) el.value = d.f[id];
+  });
+  DRAFT_CHECK_IDS.forEach(id => { const el = document.getElementById(id); if(el && d.c && d.c[id]) el.checked = true; });
+  if(d.ext) document.getElementById('p_domain_ext').value = d.ext;
+  document.getElementById('addonFields').classList.toggle('open', document.getElementById('p_addon_domain').checked);
+  const r = document.querySelector('input[name="p_domain_contact_method"][value="' + d.method + '"]');
+  if(r){ r.checked = true; r.dispatchEvent(new Event('change')); }
+  window.__draftRestored = true;
+  return true;
+}
+async function showRestoredNote(){
+  if(!window.__draftRestored) return;
+  const el = document.getElementById('formMsg');
+  if(!el) return;
+  const { data: { session } } = await sb.auth.getSession();
+  el.className = 'msg success';
+  if(session && needsProfile(CURRENT_USER)) el.textContent = '✓ Anda sudah masuk dan isian form dipulihkan. Satu langkah lagi: lengkapi data akun baru di bagian atas halaman.';
+  else if(session) el.textContent = '✓ Anda sudah masuk dan isian form sudah dipulihkan. Periksa lagi datanya, lalu klik "Kirim Pesanan & Lanjut Bayar".';
+  else el.textContent = 'Isian form sebelumnya sudah dipulihkan.';
+}
+
+// Inisialisasi EmailJS (notifikasi email ke NOTIF_EMAIL setiap ada order baru)
+if (window.emailjs && window.NAFA_CONFIG.EMAILJS_PUBLIC_KEY) {
+  emailjs.init(window.NAFA_CONFIG.EMAILJS_PUBLIC_KEY);
+}
+
+let SERVICE_TYPES = [];
+const DOMAIN_ADDON_PRICE = 250000;
+
+// ---------- Meta Pixel ----------
+// px() aman dipanggil kapan pun: kalau skrip pixel belum termuat, dicoba lagi sekali.
+// Tidak ada data pribadi (nama/kontak/email) yang dikirim ke Pixel.
+function px(name, params, onceKey){
+  if(window.nafaTrack){ window.nafaTrack(name, params, onceKey); }
+  else { setTimeout(() => { if(window.nafaTrack) window.nafaTrack(name, params, onceKey); }, 1500); }
+}
+function trackViewContent(){
+  const sel = document.getElementById('p_service');
+  const s = SERVICE_TYPES.find(x => x.id === (sel && sel.value));
+  if(!s) return;
+  px('ViewContent', {
+    content_name: s.name, content_ids: [s.id], content_type: 'product',
+    value: Number(servicePrice(s)) || 0, currency: 'IDR'
+  }, 'vc:' + s.id);
+}
+
+// Format email dasar: ada teks, satu @, ada titik di domain, tanpa spasi.
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmtRupiah(v){
+  if(v === null || v === undefined || v === '') return '-';
+  if(Number(v) === 0) return 'Konsultasi';
+  return 'Rp' + Number(v).toLocaleString('id-ID');
+}
+function servicePrice(s){
+  return s.is_promo_scheduled ? s.promo_price : s.default_price;
+}
+function isConsultationService(s){
+  const price = servicePrice(s);
+  return price === null || price === undefined || Number(price) === 0;
+}
+
+// ---------- Domain yang sudah termasuk dalam paket ----------
+// Layanan di bawah ini sudah termasuk 1 domain (ekstensi tetap). Pelanggan
+// wajib memilih nama domainnya di form. UUID HARUS sama dengan kolom "id"
+// di tabel service_types Supabase; nama dipakai sebagai cadangan.
+const INCLUDED_DOMAIN_BY_ID = {
+  '15483ce5-4025-4d65-ae2a-86398dd79f79': '.web.id'   // Jasa Pembuatan Web App Laundry
+};
+const INCLUDED_DOMAIN_BY_NAME = {
+  'jasa pembuatan web app laundry': '.web.id'
+};
+function includedDomainExt(service){
+  if(!service) return null;
+  return INCLUDED_DOMAIN_BY_ID[service.id]
+    || INCLUDED_DOMAIN_BY_NAME[(service.name || '').trim().toLowerCase()]
+    || null;
+}
+
+// ---------- Validasi nama domain ----------
+// Hanya bagian nama (tanpa ekstensi): huruf kecil, angka, tanda hubung,
+// 3-63 karakter, tidak diawali/diakhiri tanda hubung.
+function normLabel(v){
+  return String(v || '').trim().toLowerCase()
+    .replace(/^https?:\/\//, '').replace(/^www\./, '')
+    .replace(/\.(web\.id|co\.id|com|id)$/, '')
+    .replace(/\s+/g, '-');
+}
+const LABEL_PATTERN = /^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/;
+function checkLabel(raw){
+  const v = normLabel(raw);
+  if(!v) return { empty:true, value:'' };
+  if(!LABEL_PATTERN.test(v)) return { bad:true, value:v };
+  return { ok:true, value:v };
+}
+function setHint(el, state, ext, optionalEmpty){
+  el.className = 'dhint';
+  if(state.empty){ el.textContent = optionalEmpty ? '' : 'Isi nama domain yang Anda inginkan.'; return; }
+  if(state.bad){
+    el.className = 'dhint bad';
+    el.textContent = 'Gunakan huruf, angka, dan tanda hubung (-) saja, minimal 3 karakter, tidak diawali/diakhiri tanda hubung.';
+    return;
+  }
+  el.className = 'dhint ok';
+  el.textContent = '✓ Alamat website: ' + state.value + ext + ' (ketersediaan kami cek setelah pesanan masuk)';
+}
+
+// ---------- Midtrans OPSIONAL (Menu Resto QR & Website Donasi) ----------
+const MIDTRANS_OPTIONAL_IDS = [
+  'cb203d77-4aea-4337-8354-f26d5e9657a0', // Menu Resto QR - Fitur Khusus
+  '49f968be-0a69-4f9e-aba6-d2949827a226'  // Menu Resto QR - Fitur Komplit
+];
+const MIDTRANS_TEXT_RESTO = 'Dengan Midtrans (berizin Bank Indonesia & Kominfo), pembayaran pelanggan resto Anda masuk otomatis lewat sistem dan lebih cepat diproses. Prosesnya cukup sekali di awal dan dipandu langkah demi langkah.';
+const MIDTRANS_TEXT_DONASI = 'Dengan Midtrans (berizin Bank Indonesia & Kominfo), donasi masuk otomatis tanpa perlu mencocokkan bukti transfer satu per satu. Prosesnya cukup sekali di awal dan dipandu langkah demi langkah.';
+function midtransOptionalTextFor(service){
+  if(!service) return null;
+  const name = (service.name || '').toLowerCase();
+  if(MIDTRANS_OPTIONAL_IDS.includes(service.id) || name.includes('menu resto')) return MIDTRANS_TEXT_RESTO;
+  if(name.includes('website donasi')) return MIDTRANS_TEXT_DONASI;
+  return null;
+}
+function refreshMidtransOpt(service){
+  const box = document.getElementById('midtransOptBox');
+  const chk = document.getElementById('p_midtrans_wanted');
+  const text = (service && !isConsultationService(service)) ? midtransOptionalTextFor(service) : null;
+  if(text){
+    box.style.display = '';
+    document.getElementById('midtransOptText').textContent = text;
+  } else {
+    box.style.display = 'none';
+    chk.checked = false;
+  }
+  document.getElementById('midtransOptDetail').style.display = chk.checked ? 'block' : 'none';
+}
+document.getElementById('p_midtrans_wanted').addEventListener('change', (e)=>{
+  document.getElementById('midtransOptDetail').style.display = e.target.checked ? 'block' : 'none';
+});
+
+// Logic sama dengan dashboard admin (app.js):
+// - Layanan "konsultasi" (harga 0/kosong) SELALU tampil, tidak terikat jendela promo.
+// - Kalau ada layanan promo yang jendela tanggalnya aktif hari ini, tampilkan itu (+ konsultasi).
+// - Kalau tidak ada promo aktif, tampilkan semua layanan normal berharga > 0 (+ konsultasi).
+function getVisibleServiceTypes(){
+  const today = new Date().getDate();
+  const activePromo = SERVICE_TYPES.filter(s =>
+    s.active && s.is_promo_scheduled &&
+    today >= s.promo_day_start && today <= s.promo_day_end
+  );
+  const alwaysVisible = SERVICE_TYPES.filter(s => s.active && isConsultationService(s));
+  const dedupe = (arr) => Array.from(new Map(arr.map(s=>[s.id,s])).values());
+  if(activePromo.length > 0) return dedupe([...activePromo, ...alwaysVisible]);
+  const normal = SERVICE_TYPES.filter(s => s.active && !s.is_promo_scheduled && !isConsultationService(s));
+  return dedupe([...normal, ...alwaysVisible]);
+}
+
+async function loadServices(){
+  const { data, error } = await sb.from('service_types').select('*').order('created_at');
+  if(error){
+    document.getElementById('formArea').innerHTML = '<div class="empty-state">Gagal memuat daftar layanan. Coba refresh halaman ini.</div>';
+    return;
+  }
+  SERVICE_TYPES = data || [];
+  const visible = getVisibleServiceTypes();
+  const isPromo = visible.some(s => s.is_promo_scheduled);
+
+  if(isPromo){
+    document.getElementById('promoBadgeWrap').innerHTML = '<div class="promo-badge">🔥 PROMO AKTIF SAMPAI TANGGAL 15</div>';
+  }
+
+  const select = document.getElementById('p_service');
+  if(visible.length === 0){
+    document.getElementById('formArea').innerHTML = '<div class="empty-state">Belum ada layanan yang bisa dipesan saat ini. Silakan hubungi kami langsung.</div>';
+    return;
+  }
+  select.innerHTML = visible.map(s=>{
+    const price = servicePrice(s);
+    return `<option value="${esc(s.id)}">${esc(s.name)} — ${fmtRupiah(price)}</option>`;
+  }).join('');
+
+  // Kunci layanan berdasarkan ?service_id= atau ?layanan= di URL (dikirim dari
+  // tombol "Order Sekarang" di situs). service_id (UUID) diprioritaskan karena
+  // tidak pernah salah ketik/beda spasi seperti pencocokan nama.
+  const params = new URLSearchParams(window.location.search);
+  const serviceIdParam = params.get('service_id');
+  const wantedService = (params.get('layanan') || '').trim().toLowerCase();
+  const warningBox = document.getElementById('serviceMismatchWarning');
+  const lockHint = document.getElementById('serviceLockHint');
+
+  let match = null;
+  if(serviceIdParam){
+    match = visible.find(s => s.id === serviceIdParam);
+  }
+  if(!match && wantedService){
+    match = visible.find(s => s.name.trim().toLowerCase() === wantedService);
+  }
+
+  if(match){
+    select.innerHTML = `<option value="${esc(match.id)}">${esc(match.name)} — ${fmtRupiah(servicePrice(match))}</option>`;
+    select.value = match.id;
+    select.disabled = true;
+    select.style.opacity = '0.75';
+    select.style.cursor = 'not-allowed';
+    if(lockHint) lockHint.style.display = 'block';
+    if(warningBox) warningBox.style.display = 'none';
+  } else if(serviceIdParam || wantedService){
+    if(warningBox) warningBox.style.display = 'block';
+  }
+
+  // Pilihan Midtrans dari halaman asal (?midtrans=ya) ikut dicentang otomatis
+  if(params.get('midtrans') === 'ya') document.getElementById('p_midtrans_wanted').checked = true;
+
+  select.addEventListener('change', () => { updatePriceUI(); trackViewContent(); });
+  restoreDraft();   // pulihkan isian form (mis. setelah login Google/Facebook) sebelum harga & kotak domain dirender
+  updatePriceUI();
+  trackViewContent();
+}
+
+// ---------- Ringkasan & tampilan bagian domain ----------
+function currentService(){
+  return SERVICE_TYPES.find(s => s.id === document.getElementById('p_service').value);
+}
+function refreshDomainHints(){
+  const service = currentService();
+  const incExt = includedDomainExt(service);
+  const addonOn = document.getElementById('p_addon_domain').checked;
+  const addExt = document.getElementById('p_domain_ext').value;
+
+  if(incExt){
+    setHint(document.getElementById('incHint'), checkLabel(document.getElementById('p_inc_name').value), incExt, false);
+    setHint(document.getElementById('incAltHint'), checkLabel(document.getElementById('p_inc_alt').value), incExt, true);
+  }
+  if(addonOn){
+    setHint(document.getElementById('addHint'), checkLabel(document.getElementById('p_domain_name').value), addExt, false);
+    setHint(document.getElementById('addAltHint'), checkLabel(document.getElementById('p_domain_alt').value), addExt, true);
+  }
+
+  // Ringkasan
+  const lines = [];
+  if(incExt){
+    const c = checkLabel(document.getElementById('p_inc_name').value);
+    lines.push(`Domain termasuk paket: <b>${c.ok ? esc(c.value + incExt) : '(belum diisi)'}</b>`);
+  }
+  if(addonOn){
+    const c = checkLabel(document.getElementById('p_domain_name').value);
+    lines.push(`Domain tambahan (+Rp250.000): <b>${c.ok ? esc(c.value + addExt) : '(belum diisi)'}</b>`);
+  }
+  const box = document.getElementById('domSummary');
+  if(lines.length){
+    box.style.display = '';
+    document.getElementById('domSummaryBody').innerHTML = '<div class="t">Ringkasan domain Anda</div>' + lines.join('<br>');
+  } else {
+    box.style.display = 'none';
+    document.getElementById('domSummaryBody').innerHTML = '';
+  }
+}
+
+function prefillDomainContact(){
+  const wa = document.getElementById('p_domain_wa');
+  const em = document.getElementById('p_domain_email');
+  if(!wa.value.trim()) wa.value = document.getElementById('p_contact').value.trim();
+  if(!em.value.trim()) em.value = document.getElementById('p_email').value.trim();
+}
+
+function updatePriceUI(){
+  const service = currentService();
+  const addonBox = document.getElementById('addonBox');
+  const totalBox = document.getElementById('totalBox');
+  const totalValue = document.getElementById('totalValue');
+  const authBox = document.getElementById('authBox');
+  const incBox = document.getElementById('incBox');
+  const contactBox = document.getElementById('domContactBox');
+
+  if(!service){
+    [addonBox, totalBox, authBox, incBox, contactBox, document.getElementById('domSummary')].forEach(el => el.style.display = 'none');
+    refreshMidtransOpt(null);
+    return;
+  }
+
+  if(isConsultationService(service)){
+    // Layanan konsultasi: tanpa opsi domain, tanpa total harga otomatis,
+    // tanpa login/pembayaran di muka -- harga & cara bayar ditentukan
+    // setelah ngobrol dengan tim.
+    addonBox.style.display = 'none';
+    incBox.style.display = 'none';
+    contactBox.style.display = 'none';
+    document.getElementById('domSummary').style.display = 'none';
+    document.getElementById('p_addon_domain').checked = false;
+    document.getElementById('addonFields').classList.remove('open');
+    totalBox.style.display = 'none';
+    authBox.style.display = 'none';
+    refreshMidtransOpt(null);
+    return;
+  }
+
+  // Layanan perbaikan/debugging tidak butuh domain: sembunyikan opsi domain.
+  if(/perbaikan/i.test(service.name || '')){
+    addonBox.style.display = 'none';
+    incBox.style.display = 'none';
+    contactBox.style.display = 'none';
+    document.getElementById('domSummary').style.display = 'none';
+    document.getElementById('p_addon_domain').checked = false;
+    document.getElementById('addonFields').classList.remove('open');
+    refreshMidtransOpt(null);
+    totalBox.style.display = '';
+    totalValue.textContent = fmtRupiah(Number(servicePrice(service)) || 0);
+    authBox.style.display = '';
+    refreshAuthUI();
+    return;
+  }
+
+  const incExt = includedDomainExt(service);
+  incBox.style.display = incExt ? '' : 'none';
+  if(incExt) document.querySelectorAll('.incExt').forEach(el => el.textContent = incExt);
+
+  addonBox.style.display = '';
+  document.getElementById('addonTitle').innerHTML = incExt
+    ? '🌐 Tambah Domain .com / .id <span class="price-tag">+Rp250.000</span>'
+    : '🌐 Tambah Domain Berbayar <span class="price-tag">+Rp250.000</span>';
+  document.getElementById('addonDesc').textContent = incExt
+    ? 'Opsional. Ingin alamat website yang lebih profesional? Tambahkan domain .com / .id selain domain ' + incExt + ' yang sudah termasuk paket.'
+    : 'Opsional. Dapatkan nama domain sendiri (.com / .id) untuk website Anda, sekali bayar bersamaan dengan pesanan ini.';
+
+  refreshMidtransOpt(service);
+
+  const addonOn = document.getElementById('p_addon_domain').checked;
+  contactBox.style.display = (incExt || addonOn) ? '' : 'none';
+  if(incExt || addonOn) prefillDomainContact();
+  refreshDomainHints();
+
+  const base = Number(servicePrice(service)) || 0;
+  const total = base + (addonOn ? DOMAIN_ADDON_PRICE : 0);
+  totalBox.style.display = '';
+  totalValue.textContent = fmtRupiah(total);
+  authBox.style.display = '';
+  refreshAuthUI();
+}
+
+// Simpan isian otomatis setiap kali diubah (dipakai untuk pemulihan setelah login).
+['input','change'].forEach(ev => document.getElementById('formArea').addEventListener(ev, scheduleSaveDraft));
+
+// Tandai kolom email merah begitu formatnya salah, hilang begitu diperbaiki.
+document.getElementById('p_email').addEventListener('input', (e)=>{
+  const v = e.target.value.trim();
+  e.target.classList.toggle('invalid', v !== '' && !EMAIL_PATTERN.test(v));
+});
+
+document.getElementById('p_addon_domain').addEventListener('change', (e)=>{
+  document.getElementById('addonFields').classList.toggle('open', e.target.checked);
+  updatePriceUI();
+});
+
+// Nama domain: hint langsung saat mengetik, dirapikan saat kolom ditinggalkan
+['p_inc_name','p_inc_alt','p_domain_name','p_domain_alt'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', refreshDomainHints);
+  el.addEventListener('blur', () => { el.value = normLabel(el.value); refreshDomainHints(); });
+});
+document.getElementById('p_domain_ext').addEventListener('change', refreshDomainHints);
+
+function setupContactChoice(){
+  const waLabel = document.getElementById('pickWA');
+  const emailLabel = document.getElementById('pickEmail');
+  const waWrap = document.getElementById('domainWaWrap');
+  const emailWrap = document.getElementById('domainEmailWrap');
+  function refresh(){
+    const method = document.querySelector('input[name="p_domain_contact_method"]:checked').value;
+    waLabel.classList.toggle('picked', method==='wa');
+    emailLabel.classList.toggle('picked', method==='email');
+    waWrap.style.display = method==='wa' ? '' : 'none';
+    emailWrap.style.display = method==='email' ? '' : 'none';
+  }
+  document.querySelectorAll('input[name="p_domain_contact_method"]').forEach(r=>r.addEventListener('change', refresh));
+  refresh();
+}
+setupContactChoice();
+
+// ---------- Data akun (akun baru lewat Google/Facebook) ----------
+// Profil disimpan di user_metadata akun Supabase (tanpa tabel tambahan):
+//   full_name, wa_number (format 62...), contact_email, profile_complete (true bila sudah diisi).
+// Akun tanpa profile_complete dianggap baru: diminta melengkapi data sekali, lalu kembali ke form.
+let CURRENT_USER = null;
+const WA_PATTERN = /^62\d{8,13}$/;
+function needsProfile(u){ return !!u && !(u.user_metadata && u.user_metadata.profile_complete); }
+function normWA(v){
+  let d = String(v || '').replace(/[^\d]/g, '');
+  if(d.startsWith('0')) d = '62' + d.slice(1);
+  return d;
+}
+function waLocal(v){ return v ? '0' + String(v).replace(/^62/, '') : ''; }
+async function loadCurrentUser(){
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session){ CURRENT_USER = null; return null; }
+  let u = session.user;
+  try{ const r = await sb.auth.getUser(); if(r && r.data && r.data.user) u = r.data.user; }catch(e){}
+  CURRENT_USER = u;
+  return u;
+}
+// Isi kolom form yang masih kosong dari data profil (anggota lama tidak perlu mengetik ulang).
+function applyProfileToForm(u){
+  const m = u.user_metadata || {};
+  const set = (id, v) => { const el = document.getElementById(id); if(el && v && !el.value.trim()) el.value = v; };
+  set('p_customer', m.full_name || m.name);
+  set('p_contact', waLocal(m.wa_number));
+  set('p_email', m.contact_email || u.email);
+}
+function showProfileBox(u){
+  const m = u.user_metadata || {};
+  const val = id => (document.getElementById(id) || {}).value || '';
+  const fill = (id, v) => { const el = document.getElementById(id); if(el && !el.value.trim()) el.value = v || ''; };
+  fill('pf_name', m.full_name || m.name || val('p_customer'));
+  fill('pf_wa', waLocal(m.wa_number) || val('p_contact'));
+  fill('pf_email', m.contact_email || u.email || val('p_email'));
+  if(u.email){
+    document.getElementById('pfPassHint').textContent =
+      'Isi bila Anda ingin masuk ke Member Area dengan email dan password (login memakai ' + u.email + '). Boleh dikosongkan.';
+  }
+  document.getElementById('profileBox').style.display = '';
+}
+async function saveProfile(){
+  const msg = document.getElementById('pfMsg');
+  const btn = document.getElementById('pfSaveBtn');
+  const bad = (t, id) => { msg.className = 'msg error'; msg.textContent = t; const el = document.getElementById(id); if(el) el.focus(); };
+  msg.className = 'msg'; msg.textContent = '';
+  const name = document.getElementById('pf_name').value.trim();
+  const wa = normWA(document.getElementById('pf_wa').value);
+  const email = document.getElementById('pf_email').value.trim().toLowerCase();
+  const pass = document.getElementById('pf_pass').value;
+  if(name.length < 2) return bad('Nama lengkap wajib diisi.', 'pf_name');
+  if(!WA_PATTERN.test(wa)) return bad('Nomor WhatsApp belum benar. Contoh: 081234567890', 'pf_wa');
+  if(!EMAIL_PATTERN.test(email)) return bad('Format email belum benar. Contoh: nama@email.com', 'pf_email');
+  if(pass && pass.length < 6) return bad('Password minimal 6 karakter, atau kosongkan.', 'pf_pass');
+
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+  const attrs = { data: { full_name: name, wa_number: wa, contact_email: email, profile_complete: true } };
+  if(pass) attrs.password = pass;
+  const { data, error } = await sb.auth.updateUser(attrs);
+  btn.disabled = false; btn.textContent = 'Simpan & Lanjut ke Form Pesanan';
+  if(error){ return bad('Gagal menyimpan data akun: ' + error.message, 'pf_name'); }
+
+  CURRENT_USER = (data && data.user) || CURRENT_USER;
+  // Pindahkan data ke form pesanan (hanya kolom yang masih kosong, isian pelanggan tidak ditimpa).
+  const set = (id, v) => { const el = document.getElementById(id); if(el && !el.value.trim()) el.value = v; };
+  set('p_customer', name); set('p_contact', waLocal(wa)); set('p_email', email);
+  document.getElementById('profileBox').style.display = 'none';
+  saveDraft();
+  const fm = document.getElementById('formMsg');
+  fm.className = 'msg success';
+  fm.textContent = '✓ Data akun tersimpan. Periksa isian pesanan di bawah, lalu klik "Kirim Pesanan & Lanjut Bayar".';
+  document.getElementById('submitBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+document.getElementById('pfSaveBtn').addEventListener('click', saveProfile);
+async function initAccountStep(){
+  const u = await loadCurrentUser();
+  if(!u) return;
+  applyProfileToForm(u);
+  if(needsProfile(u)) showProfileBox(u);
+}
+
+// ---------- Login Google/Facebook (syarat sebelum lanjut ke Midtrans) ----------
+async function refreshAuthUI(){
+  const { data } = await sb.auth.getSession();
+  const loginBtns = document.getElementById('authLoginBtns');
+  const loggedInInfo = document.getElementById('authLoggedInInfo');
+  if(data.session){
+    loginBtns.style.display = 'none';
+    loggedInInfo.style.display = 'block';
+    loggedInInfo.textContent = '✓ Masuk sebagai ' + (data.session.user.email || 'Pengguna');
+    // Bantu isi kolom Email otomatis dari akun yang dipakai login, tapi
+    // hanya kalau customer belum mengetik apa pun (tidak menimpa isian).
+    const emailInput = document.getElementById('p_email');
+    if(emailInput && !emailInput.value.trim() && data.session.user.email){
+      emailInput.value = data.session.user.email;
+    }
+  } else {
+    loginBtns.style.display = 'flex';
+    loggedInInfo.style.display = 'none';
+  }
+}
+
+document.getElementById('authLoginGoogle').addEventListener('click', () => {
+  saveDraft();
+  sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.href } });
+});
+document.getElementById('authLoginFacebook').addEventListener('click', () => {
+  saveDraft();
+  sb.auth.signInWithOAuth({ provider: 'facebook', options: { redirectTo: window.location.href } });
+});
+
+// Kirim notifikasi email ke tim NAFA Tech lewat EmailJS setiap ada order
+// baru yang berhasil masuk. Kalau EmailJS gagal, order TETAP tersimpan.
+async function sendEmailNotification(order){
+  if(!window.emailjs || !window.NAFA_CONFIG.EMAILJS_SERVICE_ID){
+    console.warn('EmailJS belum dikonfigurasi, lewati notifikasi email.');
+    return;
+  }
+  try{
+    await emailjs.send(
+      window.NAFA_CONFIG.EMAILJS_SERVICE_ID,
+      window.NAFA_CONFIG.EMAILJS_TEMPLATE_ID,
+      {
+        to_email: window.NAFA_CONFIG.NOTIF_EMAIL,
+        customer_name: order.customer_name,
+        contact: order.contact,
+        customer_email: order.customer_email,
+        service_name: order.serviceName,
+        notes: order.notes || '-',
+        price: fmtRupiah(order.price)
+      }
+    );
+  }catch(err){
+    console.error('Gagal mengirim notifikasi email:', err);
+  }
+}
+
+function fail(msg, focusId){
+  const msgEl = document.getElementById('formMsg');
+  msgEl.className = 'msg error';
+  msgEl.textContent = msg;
+  if(focusId){
+    const el = document.getElementById(focusId);
+    if(el){ el.focus(); el.scrollIntoView({ behavior:'smooth', block:'center' }); }
+  }
+  return null;
+}
+
+// Validasi semua isian form & hitung harga. Mengembalikan null (dan
+// menampilkan pesan error) kalau ada yang belum lengkap/salah, atau
+// objek payload order siap-insert kalau semua valid.
+async function validateAndBuildOrder(){
+  const msgEl = document.getElementById('formMsg');
+  const emailInput = document.getElementById('p_email');
+  msgEl.className = 'msg';
+  msgEl.textContent = '';
+
+  const customer_name = document.getElementById('p_customer').value.trim();
+  const contact = document.getElementById('p_contact').value.trim();
+  const customer_email = emailInput.value.trim().toLowerCase();
+  const service_type_id = document.getElementById('p_service').value;
+  const notes = document.getElementById('p_notes').value.trim();
+
+  if(!customer_name || !contact) return fail('Nama dan kontak wajib diisi.', !customer_name ? 'p_customer' : 'p_contact');
+  // Email WAJIB untuk semua layanan, karena dipakai untuk menghubungkan
+  // pesanan ke akun Member Area pelanggan.
+  if(!customer_email){
+    emailInput.classList.add('invalid');
+    return fail('Email wajib diisi.', 'p_email');
+  }
+  if(!EMAIL_PATTERN.test(customer_email)){
+    emailInput.classList.add('invalid');
+    return fail('Format email belum benar. Contoh: nama@email.com', 'p_email');
+  }
+  emailInput.classList.remove('invalid');
+
+  const service = SERVICE_TYPES.find(s => s.id === service_type_id);
+  if(!service) return fail('Layanan belum dipilih atau tidak valid. Coba refresh halaman.');
+
+  const isConsult = isConsultationService(service);
+  const incExt = isConsult ? null : includedDomainExt(service);
+  const wantsDomain = !isConsult && document.getElementById('p_addon_domain').checked;
+  let finalNotes = notes;
+  let price = isConsult ? null : (Number(servicePrice(service)) || 0);
+
+  // ---- Domain yang termasuk paket (mis. .web.id) ----
+  let incName = null, incAlt = null;
+  if(incExt){
+    const c = checkLabel(document.getElementById('p_inc_name').value);
+    if(c.empty) return fail('Mohon isi nama domain ' + incExt + ' yang Anda inginkan.', 'p_inc_name');
+    if(c.bad) return fail('Nama domain ' + incExt + ' belum sesuai. Gunakan huruf, angka, dan tanda hubung (-), minimal 3 karakter.', 'p_inc_name');
+    incName = c.value;
+    const a = checkLabel(document.getElementById('p_inc_alt').value);
+    if(a.bad) return fail('Nama cadangan ' + incExt + ' belum sesuai. Kosongkan bila tidak diperlukan.', 'p_inc_alt');
+    if(a.ok) incAlt = a.value;
+  }
+
+  // ---- Domain berbayar (add-on .com / .id) ----
+  let addName = null, addExt = null, addAlt = null;
+  if(wantsDomain){
+    addExt = document.getElementById('p_domain_ext').value;
+    const c = checkLabel(document.getElementById('p_domain_name').value);
+    if(c.empty) return fail('Mohon isi nama domain yang diinginkan, atau batalkan centang Domain Berbayar.', 'p_domain_name');
+    if(c.bad) return fail('Nama domain ' + addExt + ' belum sesuai. Gunakan huruf, angka, dan tanda hubung (-), minimal 3 karakter.', 'p_domain_name');
+    addName = c.value;
+    const a = checkLabel(document.getElementById('p_domain_alt').value);
+    if(a.bad) return fail('Nama cadangan ' + addExt + ' belum sesuai. Kosongkan bila tidak diperlukan.', 'p_domain_alt');
+    if(a.ok) addAlt = a.value;
+    price += DOMAIN_ADDON_PRICE;
+  }
+
+  // ---- Kontak konfirmasi ketersediaan (untuk semua pilihan domain) ----
+  let method = null, domainContactVal = null;
+  if(incExt || wantsDomain){
+    method = document.querySelector('input[name="p_domain_contact_method"]:checked').value;
+    domainContactVal = method === 'wa'
+      ? document.getElementById('p_domain_wa').value.trim()
+      : document.getElementById('p_domain_email').value.trim();
+    if(!domainContactVal){
+      return fail('Mohon isi kontak untuk konfirmasi ketersediaan domain (WhatsApp/Email).', method === 'wa' ? 'p_domain_wa' : 'p_domain_email');
+    }
+  }
+  const contactLine = method ? `Kontak konfirmasi ketersediaan: ${method==='wa' ? 'WhatsApp' : 'Email'} — ${domainContactVal}\n` : '';
+
+  if(incExt){
+    finalNotes = (finalNotes || '') +
+      `\n\n— DOMAIN TERMASUK PAKET (${incExt}) —\n` +
+      `Nama domain diminta: ${incName}${incExt}\n` +
+      (incAlt ? `Nama cadangan: ${incAlt}${incExt}\n` : '') +
+      contactLine +
+      `(Kalau nama tidak tersedia, hubungi pelanggan lewat kontak di atas untuk nama alternatif.)`;
+  }
+  if(wantsDomain){
+    finalNotes = (finalNotes || '') +
+      `\n\n— DOMAIN BERBAYAR (+Rp250.000) —\n` +
+      `Nama domain diminta: ${addName}${addExt}\n` +
+      (addAlt ? `Nama cadangan: ${addAlt}${addExt}\n` : '') +
+      contactLine +
+      `(Kalau nama tidak tersedia, hubungi pelanggan lewat kontak di atas untuk nama alternatif.)`;
+  }
+
+  // Midtrans OPSIONAL: catat pilihan pelanggan (hanya bila dicentang)
+  if(!isConsult && midtransOptionalTextFor(service) && document.getElementById('p_midtrans_wanted').checked){
+    finalNotes = (finalNotes || '') +
+      `\n\n— MIDTRANS (opsional): pelanggan ingin mengaktifkan pembayaran otomatis lewat Midtrans, mohon kirim panduan daftar merchant —`;
+  }
+
+  return {
+    isConsult,
+    serviceName: service.name,
+    customer_name, contact, customer_email,
+    service_type_id,
+    estimated_hours: service.default_hours,
+    notes: finalNotes || null,
+    price
+  };
+}
+
+// Simpan order ke database. Kalau bukan layanan konsultasi, lanjut
+// otomatis ke pembuatan link pembayaran Midtrans & redirect ke sana.
+async function finalizeOrder(payload){
+  const msgEl = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Mengirim...';
+
+  const insertBody = {
+    customer_name: payload.customer_name,
+    contact: payload.contact,
+    customer_email: payload.customer_email,
+    service_type_id: payload.service_type_id,
+    estimated_hours: payload.estimated_hours,
+    notes: payload.notes,
+    status: 'waiting',
+    price: payload.price
+    // payment_status TIDAK diisi manual -> otomatis 'unpaid' (default kolom),
+    // baru berubah jadi 'paid' lewat webhook setelah customer benar-benar bayar.
+  };
+
+  const { data, error } = await sb.from('orders').insert(insertBody).select().single();
+
+  if(error){
+    msgEl.className = 'msg error';
+    msgEl.textContent = 'Gagal mengirim pesanan: ' + error.message;
+    btn.disabled = false;
+    btn.textContent = 'Kirim Pesanan & Lanjut Bayar';
+    return;
+  }
+
+  clearDraft();   // pesanan sudah tersimpan -> isian sementara tidak diperlukan lagi
+
+  // Notifikasi email ke tim (tidak ditunggu -- kalau gagal, pesanan tetap tersimpan).
+  sendEmailNotification({
+    customer_name: payload.customer_name, contact: payload.contact,
+    customer_email: payload.customer_email, notes: payload.notes,
+    serviceName: payload.serviceName, price: payload.price
+  });
+
+  // Pixel: pesanan tersimpan. Konsultasi = Lead, berbayar = InitiateCheckout (lanjut ke Midtrans).
+  const pxItem = { content_name: payload.serviceName, content_ids: [payload.service_type_id], content_type: 'product' };
+  if(payload.isConsult){ px('Lead', pxItem); }
+  else { px('InitiateCheckout', { ...pxItem, value: Number(payload.price) || 0, currency: 'IDR' }); }
+
+  if(payload.isConsult){
+    document.getElementById('formArea').innerHTML =
+      '<div class="empty-state" style="color:var(--ok);">✅ Pesanan Anda berhasil dikirim!<br><br>Tim kami akan segera menghubungi Anda di ' + esc(payload.contact) + ' untuk konfirmasi selanjutnya.<br><br>Daftar di Member Area dengan email <b>' + esc(payload.customer_email) + '</b> untuk memantau progress pesanan Anda.</div>';
+    return;
+  }
+
+  // ---- Layanan berbayar: buat link Midtrans & langsung redirect ----
+  msgEl.className = 'msg success';
+  msgEl.textContent = `Pesanan diterima! Mengarahkan ke halaman pembayaran...`;
+  btn.textContent = 'Menuju pembayaran...';
+
+  try{
+    const payRes = await fetch(`${window.NAFA_CONFIG.SUPABASE_URL}/functions/v1/create-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${window.NAFA_CONFIG.SUPABASE_ANON_KEY}`,
+        'apikey': window.NAFA_CONFIG.SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({ order_id: data.id })
+    });
+    const payResult = await payRes.json();
+    if(payResult.redirect_url){
+      window.location.href = payResult.redirect_url;
+      return;
+    } else {
+      msgEl.className = 'msg error';
+      msgEl.textContent = `Pesanan tersimpan, tapi link pembayaran gagal dibuat (${payResult.error ? JSON.stringify(payResult.error) : 'unknown error'}). Hubungi kami via WhatsApp.`;
+    }
+  }catch(payErr){
+    msgEl.className = 'msg error';
+    msgEl.textContent = `Pesanan tersimpan, tapi gagal membuka halaman pembayaran: ${payErr.message}. Hubungi kami via WhatsApp.`;
+  }
+  btn.textContent = 'Pesanan Tersimpan — Hubungi WA untuk Bayar';
+}
+
+// Dipanggil saat tombol "Kirim Pesanan & Lanjut Bayar" diklik.
+async function handleSubmitClick(){
+  const payload = await validateAndBuildOrder();
+  if(!payload) return;
+
+  if(payload.isConsult){
+    await finalizeOrder(payload);
+    return;
+  }
+
+  // Layanan berbayar -> wajib login Google/Facebook dulu (syarat Midtrans)
+  const { data: { session } } = await sb.auth.getSession();
+  if(session){
+    const u = CURRENT_USER || await loadCurrentUser();
+    if(needsProfile(u)){
+      // Akun baru: lengkapi data akun dulu (isian pesanan tetap aman di form).
+      saveDraft();
+      showProfileBox(u);
+      const m = document.getElementById('formMsg');
+      m.className = 'msg error';
+      m.textContent = 'Satu langkah lagi: lengkapi dulu data akun baru Anda di bagian atas, lalu klik kirim lagi.';
+      document.getElementById('profileBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    await finalizeOrder(payload);
+  } else {
+    saveDraft();
+    store.set(PENDING_KEY, JSON.stringify(payload));
+    const msgEl = document.getElementById('formMsg');
+    msgEl.className = 'msg';
+    msgEl.textContent = 'Data pesanan Anda sudah disimpan sementara. Silakan masuk dengan Google/Facebook di bawah untuk melanjutkan ke pembayaran.';
+    document.getElementById('authBox').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+}
+
+// Kalau halaman ini dibuka kembali setelah redirect login OAuth, dan ada
+// data pesanan yang sempat "ditahan" di sessionStorage, lanjutkan otomatis
+// tanpa customer perlu isi ulang form atau klik kirim lagi.
+async function resumePendingOrderIfAny(){
+  const pendingRaw = store.get(PENDING_KEY);
+  if(!pendingRaw) return false;
+  const { data: { session } } = await sb.auth.getSession();
+  if(!session) return false;
+  const cu = CURRENT_USER || await loadCurrentUser();
+  if(needsProfile(cu)){ store.del(PENDING_KEY); return false; }   // akun baru: lengkapi profil dulu, jangan kirim otomatis
+  store.del(PENDING_KEY);
+  let payload;
+  try{ payload = JSON.parse(pendingRaw); }catch(e){ return false; }
+  // Pesanan lama yang sempat tertahan sebelum kolom Email diwajibkan
+  // tidak punya email -- pakai email akun login sebagai cadangan.
+  if(!payload.customer_email) payload.customer_email = (session.user.email || '').toLowerCase();
+  await finalizeOrder(payload);
+  return true;
+}
+
+loadServices()
+  .then(initAccountStep)
+  .then(resumePendingOrderIfAny)
+  .then(resumed => { if(!resumed) return showRestoredNote(); });
+</script>
+</body>
+</html>
