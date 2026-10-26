@@ -9,6 +9,8 @@ let SERVICE_TIERS = []; // semua tier, difilter per service saat dipakai
 
 // >>> Sesuaikan kalau alamat website utama Anda berubah <<<
 const SITE_BASE_URL = "https://rifkyanhar.github.io/Etalasedigital";
+// Link ulasan Google Maps NAFA Tech (opsi alternatif selain halaman feedback)
+const GMAPS_REVIEW_URL = "https://maps.app.goo.gl/cDMeF7advmACwfwz9";
 const FEEDBACK_MIN_HOURS = 72; // jam tunggu sebelum tombol "Kirim Link Feedback" aktif
 
 // ---------- helpers ----------
@@ -420,7 +422,8 @@ async function sendFeedbackLink(orderId){
   const feedbackUrl = `${SITE_BASE_URL}/feedback.html?order=${order.queue_number}&layanan=${encodeURIComponent(serviceName(order.service_type_id))}`;
   const text = encodeURIComponent(
     `Halo ${order.customer_name}, terima kasih sudah menggunakan layanan NAFA Tech untuk order #${order.queue_number}. ` +
-    `Kalau ada waktu, boleh bantu beri penilaian singkat di sini? ${feedbackUrl}`
+    `Kalau ada waktu, boleh bantu beri penilaian singkat di sini? ${feedbackUrl}\n\n` +
+    `Atau kalau lebih nyaman, boleh juga beri ulasan di Google Maps kami: ${GMAPS_REVIEW_URL}`
   );
   window.open(`https://wa.me/${phone}?text=${text}`, '_blank');
 
